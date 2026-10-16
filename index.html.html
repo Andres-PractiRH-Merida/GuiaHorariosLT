@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&amp;display=swap">
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #1a1918; overscroll-behavior: none; font-family: "Archivo", system-ui, sans-serif; }
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  a { color: #ae1800; text-decoration: none; }
+  a:hover { color: #ec3013; }
+  @media print { html, body { background: #fff; } }
+  @keyframes swipeHint { 0% { transform: translateX(70px); opacity: 0; } 15% { opacity: 1; } 75% { transform: translateX(-70px); opacity: 1; } 100% { transform: translateX(-70px); opacity: 0; } }
+  @keyframes pulseNext { 0%, 100% { box-shadow: 0 0 0 0 rgba(236,48,19,0.7); } 50% { box-shadow: 0 0 0 8px rgba(236,48,19,0); } }
+</style>
+</helmet>
+<div style="position: fixed; inset: 0; display: grid; grid-template-rows: auto 1fr auto; background: #1a1918; font-family: 'Archivo', system-ui, sans-serif; color: #f3f2f2; user-select: none; overflow: hidden;">
+
+  <header style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px 10px 16px; border-bottom: 2px solid rgba(243,242,242,0.18);">
+    <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Plantillas de horario</span>
+      <span style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(243,242,242,0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Guía para líderes de tienda</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; flex: none;">
+      <button onClick="{{ openIndex }}" aria-label="Ir al índice" style="height: 40px; display: flex; align-items: center; gap: 8px; font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #ffffff; background: #ec3013; border: none; padding: 0 12px; cursor: pointer;" style-hover="background: #c8250c;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>Índice</button>
+      
+      <button onClick="{{ toggleFull }}" aria-label="Pantalla completa" title="Pantalla completa" style="width: 40px; height: 40px; display: grid; place-items: center; color: #f3f2f2; background: transparent; border: 2px solid rgba(243,242,242,0.28); cursor: pointer; padding: 0;" style-hover="border-color: #ec3013; color: #ec3013;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
+    </div>
+  </header>
+
+  <main ref="{{ mainRef }}" onPointerDown="{{ onDown }}" onPointerUp="{{ onUp }}" style="position: relative; display: grid; place-items: center; padding: 24px clamp(16px, 7vw, 96px); min-height: 0;">
+
+    <div ref="{{ stageRef }}" style="position: relative; height: 100%; aspect-ratio: 2 / 3; max-width: 100%; touch-action: pan-y; perspective: 2400px; perspective-origin: 50% 50%;">
+
+      <div style="position: absolute; inset: 0; background: #0f0e0e; box-shadow: 0 30px 80px rgba(0,0,0,0.55);"></div>
+
+      <div ref="{{ underRef }}" style="position: absolute; inset: 0; background: #ffffff; overflow: hidden;">
+        {{ underContent }}
+      </div>
+      <div ref="{{ scrimRef }}" style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0) 45%); opacity: 0; pointer-events: none;"></div>
+
+      <div ref="{{ flipRef }}" style="position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: left center; will-change: transform; pointer-events: none; visibility: hidden;">
+        <div ref="{{ frontRef }}" style="position: absolute; inset: 0; backface-visibility: hidden; background: #ffffff; overflow: hidden; box-shadow: 8px 0 40px rgba(0,0,0,0.4);">
+          {{ frontContent }}
+        </div>
+        <div style="position: absolute; inset: 0; backface-visibility: hidden; transform: rotateY(180deg); background: linear-gradient(90deg, #e8e6e4, #f7f6f5 60%, #ddd9d6); box-shadow: -8px 0 40px rgba(0,0,0,0.4);"></div>
+      </div>
+
+      <div ref="{{ zoneL }}" onClick="{{ prev }}" style="position: absolute; left: 0; top: 0; bottom: 0; width: 6%; cursor: w-resize;"></div>
+      <div ref="{{ zoneR }}" onClick="{{ next }}" style="position: absolute; right: 0; top: 0; bottom: 0; width: 6%; cursor: e-resize;"></div>
+    </div>
+
+    <button ref="{{ sideL }}" onClick="{{ prev }}" style="position: absolute; left: clamp(4px, 1.6vw, 28px); top: 50%; transform: translateY(-50%); width: 48px; height: 48px; display: grid; place-items: center; background: transparent; border: 2px solid rgba(243,242,242,0.28); color: #f3f2f2; cursor: pointer;" style-hover="border-color: #ec3013; color: #ec3013;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M15 18l-6-6 6-6"></path></svg>
+    </button>
+    <button ref="{{ sideR }}" onClick="{{ next }}" style="position: absolute; right: clamp(4px, 1.6vw, 28px); top: 50%; transform: translateY(-50%); width: 48px; height: 48px; display: grid; place-items: center; background: transparent; border: 2px solid rgba(243,242,242,0.28); color: #f3f2f2; cursor: pointer;" style-hover="border-color: #ec3013; color: #ec3013;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M9 18l6-6-6-6"></path></svg>
+    </button>
+    {{ coach }}
+  </main>
+
+  <footer style="display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; gap: 10px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); border-top: 2px solid rgba(243,242,242,0.18);">
+    <button onClick="{{ prev }}" aria-label="Página anterior" style="justify-self: start; height: 48px; display: flex; align-items: center; gap: 6px; font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 0 12px; cursor: pointer; color: #f3f2f2; background: transparent; border: 2px solid rgba(243,242,242,0.28);" style-hover="border-color: #ec3013; color: #ec3013;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="square"><path d="M15 18l-6-6 6-6"></path></svg>Anterior</button>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+      <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.12em; white-space: nowrap;">{{ counter }}</span>
+      <div style="width: min(160px, 20vw); min-width: 56px; height: 3px; background: rgba(243,242,242,0.2);">
+        <div ref="{{ barRef }}" style="height: 3px; background: #ec3013; width: 0%;"></div>
+      </div>
+    </div>
+    <button ref="{{ nextRef }}" onClick="{{ next }}" aria-label="Página siguiente" style="justify-self: end; height: 48px; display: flex; align-items: center; gap: 6px; font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 0 12px; cursor: pointer; color: #ffffff; background: #ec3013; border: 2px solid #ec3013;" style-hover="background: #c8250c;">Siguiente<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="square"><path d="M9 18l6-6-6-6"></path></svg></button>
+  </footer>
+
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const h = React.createElement;
+const W = 800, H = 1200, MW = 400, FLIP_MS = 780;
+const F = "Archivo, system-ui, sans-serif";
+const INK = "#201e1d", ACC = "#ec3013", MUT = "#6b6663", SUR = "#eae9e9", BG = "#f3f2f2";
+const DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+const DAYS_L = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+const TYPE = {
+  D: { n: "Diurno", bg: "#ffe0d9", fg: "#7c1405", d: "Turno de día. Es el único con media hora de margen antes del tiempo extra." },
+  M: { n: "Mixto", bg: "#ff9783", fg: "#4d170e", d: "Turno de tarde que termina entre las 21:00 y las 23:30." },
+  N: { n: "Nocturno", bg: "#201e1d", fg: "#f3f2f2", d: "Cubre el cierre (13:30 – 00:00) o la madrugada (20:00 – 06:30 · 23:00 – 07:24)." }
+};
+const SCH = {
+  "6x1": { lim: 7.5, ot: "8.0", bg: "#ec3013", fg: "#ffffff", d: "6 días de trabajo y 1 de descanso. Tiempo extra desde la hora 8." },
+  "5x2": { lim: 9, ot: "9.5", bg: "#ffc629", fg: "#201e1d", d: "5 días de trabajo y 2 de descanso. Tiempo extra desde la hora 9.5." },
+  "4x3": { lim: 11.5, ot: "12.0", bg: "#201e1d", fg: "#ffffff", d: "4 días de trabajo y 3 de descanso. Si se trabaja de más, cuenta desde la hora 12." }
+};
+const COV = { 0: "#ffffff", 1: ACC, 2: "#bab6b6", 3: "#605d5d", night: "#2d2b2b" };
+
+const TPL = [
+  {"n":5,"v":"16 horas","sheet":"5P 16h | Horario semanal optimizado","range":[8,24],"night":false,"note":"","ind":{"solo":"24 h 15 min","mx":"5 h 30 min","rest":"13 h 30 min","alert":"ALERTA: no fue posible eliminar todos los periodos solo"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["","M 16:00-23:30","M 16:00-23:30","M 16:00-23:30","M 16:00-23:30","M 16:00-23:30","M 16:00-23:30"]},{"id":"C2","sch":"5x2","ref":45,"d":["","D 08:00-17:00","D 08:00-17:00","D 08:00-17:00","","D 08:00-17:00","D 08:00-17:00"]},{"id":"C3","sch":"5x2","ref":45,"d":["D 08:00-17:00","","D 08:00-17:00","","D 08:00-17:00","D 08:00-17:00","D 08:00-17:00"]},{"id":"C4","sch":"4x3","ref":42,"d":["N 13:30-00:00","","N 13:30-00:00","N 13:30-00:00","","","N 13:30-00:00"]},{"id":"C5","sch":"4x3","ref":45,"d":["M 12:00-23:15","N 13:30-00:00","","","N 13:30-00:00","N 13:30-00:00",""]}]},
+  {"n":5,"v":"17 horas","sheet":"5P 17h | Horario semanal optimizado","range":[7,24],"night":false,"note":"","ind":{"solo":"28 h 15 min","mx":"6 h 30 min","rest":"12 h 00 min","alert":"ALERTA: no fue posible eliminar todos los periodos solo"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["","D 07:00-14:30","D 07:00-14:30","D 07:00-14:30","D 07:00-14:30","D 07:00-14:30","D 07:00-14:30"]},{"id":"C2","sch":"5x2","ref":45,"d":["","D 07:00-16:00","M 14:30-23:30","","M 14:30-23:30","M 14:30-23:30","M 14:30-23:30"]},{"id":"C3","sch":"5x2","ref":45,"d":["D 07:00-16:00","M 14:30-23:30","","M 14:30-23:30","","D 07:00-16:00","D 07:00-16:00"]},{"id":"C4","sch":"4x3","ref":45,"d":["M 12:00-23:15","","","N 13:30-00:00","","N 13:30-00:00","N 13:30-00:00"]},{"id":"C5","sch":"4x3","ref":42,"d":["N 13:30-00:00","N 13:30-00:00","N 13:30-00:00","","N 13:30-00:00","",""]}]},
+  {"n":5,"v":"18 horas","sheet":"5P 18h | Horario semanal optimizado","range":[6,24],"night":false,"note":"","ind":{"solo":"34 h 15 min","mx":"7 h 30 min","rest":"13 h 30 min","alert":"ALERTA: no fue posible eliminar todos los periodos solo"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["M 16:00-23:30","M 16:00-23:30","","D 06:00-13:30","D 06:00-13:30","D 06:00-13:30","D 06:00-13:30"]},{"id":"C2","sch":"5x2","ref":45,"d":["","D 06:00-15:00","D 06:00-15:00","D 06:00-15:00","","M 14:30-23:30","M 14:30-23:30"]},{"id":"C3","sch":"5x2","ref":45,"d":["D 06:00-15:00","","M 14:30-23:30","M 14:30-23:30","","D 06:00-15:00","D 06:00-15:00"]},{"id":"C4","sch":"4x3","ref":42,"d":["N 13:30-00:00","","N 13:30-00:00","N 13:30-00:00","N 13:30-00:00","",""]},{"id":"C5","sch":"4x3","ref":45,"d":["","N 13:30-00:00","","","M 12:00-23:15","N 13:30-00:00","N 13:30-00:00"]}]},
+  {"n":6,"v":"6x1 + nocturno 5x2","sheet":"Plantilla 6 personas | C6 6x1 | Formato visual optimizado","range":[0,24],"night":true,"note":"C5 es el nocturno principal; C6 cubre sus descansos nocturnos.","ind":null,"rows":[{"id":"C1","sch":"6x1","ref":null,"d":["D 07:30-15:00","M 16:00-23:30","","D 06:00-13:30","D 06:00-13:30","D 06:00-13:30","D 06:00-13:30"]},{"id":"C2","sch":"6x1","ref":null,"d":["","D 06:00-13:30","D 11:30-19:00","M 15:30-23:00","M 16:00-23:30","M 16:00-23:30","M 15:30-23:00"]},{"id":"C3","sch":"6x1","ref":null,"d":["D 10:00-17:30","D 07:00-14:30","M 15:30-23:00","M 14:00-21:30","M 13:30-21:00","M 13:30-21:00",""]},{"id":"C4","sch":"6x1","ref":null,"d":["D 06:00-13:30","","D 07:30-15:00","D 07:30-15:00","D 07:00-14:30","D 07:30-15:00","D 08:30-16:00"]},{"id":"C5","sch":"5x2","ref":null,"d":["N 23:00-07:30","N 23:00-07:30","N 23:00-07:30","N 23:00-07:30","","","N 23:00-07:30"]},{"id":"C6","sch":"6x1","ref":null,"d":["M 15:30-23:00","M 14:00-21:30","M 13:30-21:00","M 12:30-20:00","N 23:00-06:00","N 23:00-06:00",""]}]},
+  {"n":6,"v":"6x1 + 5x2 noc-mix","sheet":"6 personas | 6x1 diurno/mixto + 5x2 nocturno/mixto","range":[0,24],"night":true,"note":"C5 cubre 5 noches; C6 cubre 2 noches de descanso y completa su 5x2 con 3 turnos mixtos.","ind":{"solo":"29 h 00 min","mx":"8 h 00 min","rest":"14 h 30 min","alert":"ALERTA: persisten periodos solo"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["D 07:30-15:00","M 16:00-23:30","","D 06:00-13:30","D 06:00-13:30","D 06:00-13:30","D 06:00-13:30"]},{"id":"C2","sch":"6x1","ref":45,"d":["","D 06:00-13:30","D 06:00-13:30","M 16:00-23:30","M 16:00-23:30","M 16:00-23:30","M 14:30-22:00"]},{"id":"C3","sch":"6x1","ref":45,"d":["","D 07:00-14:30","M 15:30-23:00","M 14:00-21:30","M 13:30-21:00","M 13:30-21:00","M 15:30-23:00"]},{"id":"C4","sch":"6x1","ref":45,"d":["D 06:00-13:30","","D 07:30-15:00","D 07:30-15:00","D 07:00-14:30","D 07:30-15:00","D 07:30-15:00"]},{"id":"C5","sch":"5x2","ref":42,"d":["N 23:00-07:24","N 23:00-07:24","N 23:00-07:24","N 23:00-07:24","","","N 23:00-07:24"]},{"id":"C6","sch":"5x2","ref":43.8,"d":["M 14:30-23:30","M 14:00-23:00","M 13:30-22:30","","N 23:00-07:24","N 23:00-07:24",""]}]},
+  {"n":6,"v":"Opción 1 | Horario semanal optimizado","sheet":"6P Opción 1 | Horario semanal optimizado","range":[0,24],"night":true,"note":"","ind":{"solo":"32 h 03 min","mx":"6 h 00 min","rest":"12 h 00 min","alert":"ALERTA: no fue posible eliminar todos los periodos solo"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["D 10:30-18:00","D 10:30-18:00","M 16:00-23:30","M 15:30-23:00","","M 16:00-23:30","M 16:00-23:30"]},{"id":"C2","sch":"6x1","ref":45,"d":["D 06:00-13:30","D 06:00-13:30","","D 06:00-13:30","D 06:00-13:30","D 06:00-13:30","D 06:00-13:30"]},{"id":"C3","sch":"5x2","ref":45,"d":["M 14:30-23:30","M 14:30-23:30","","N 23:00-07:24","N 23:00-07:24","N 23:00-07:24",""]},{"id":"C4","sch":"5x2","ref":45,"d":["","D 06:00-15:00","D 06:00-15:00","D 06:30-15:30","M 14:30-23:30","","D 11:00-20:00"]},{"id":"C5","sch":"4x3","ref":42,"d":["N 20:00-06:30","N 20:00-06:30","N 20:00-06:30","","","","N 20:00-06:30"]},{"id":"C6","sch":"4x3","ref":45,"d":["","","D 08:30-19:45","N 13:30-00:00","M 12:00-23:15","M 12:00-23:15",""]}]},
+  {"n":6,"v":"Opción 2 | Horario semanal optimizado","sheet":"6P Opción 2 | Horario semanal optimizado","range":[0,24],"night":true,"note":"","ind":{"solo":"31 h 27 min","mx":"6 h 00 min","rest":"12 h 00 min","alert":"ALERTA: no fue posible eliminar todos los periodos solo"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["M 16:00-23:30","M 16:00-23:30","","D 06:00-13:30","D 06:00-13:30","M 16:00-23:30","D 12:30-20:00"]},{"id":"C2","sch":"6x1","ref":45,"d":["D 12:30-20:00","D 12:30-20:00","M 16:00-23:30","M 15:30-23:00","M 15:30-23:00","","D 06:00-13:30"]},{"id":"C3","sch":"5x2","ref":45,"d":["D 06:00-15:00","D 06:00-15:00","","N 23:00-07:24","N 23:00-07:24","N 23:00-07:24",""]},{"id":"C4","sch":"5x2","ref":45,"d":["","","D 06:00-15:00","D 06:30-15:30","D 06:30-15:30","D 06:00-15:00","M 14:30-23:30"]},{"id":"C5","sch":"4x3","ref":42,"d":["N 20:00-06:30","N 20:00-06:30","N 20:00-06:30","","","","N 20:00-06:30"]},{"id":"C6","sch":"4x3","ref":45,"d":["","","D 06:30-17:45","N 13:30-00:00","N 13:30-00:00","M 12:00-23:15",""]}]},
+  {"n":6,"v":"Opción 3 | Horario semanal optimizado","sheet":"6P Opción 3 | Horario semanal optimizado","range":[0,24],"night":true,"note":"","ind":{"solo":"31 h 48 min","mx":"5 h 06 min","rest":"12 h 00 min","alert":"ALERTA: no fue posible eliminar todos los periodos solo"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["D 06:00-13:30","D 06:00-13:30","D 06:00-13:30","D 06:00-13:30","M 16:00-23:30","","D 06:00-13:30"]},{"id":"C2","sch":"6x1","ref":45,"d":["M 16:00-23:30","D 13:00-20:30","","D 06:30-14:00","D 06:00-13:30","M 15:30-23:00","D 12:30-20:00"]},{"id":"C3","sch":"5x2","ref":45,"d":["D 11:00-20:00","M 14:30-23:30","","N 23:00-07:24","N 23:00-07:24","N 23:00-07:24",""]},{"id":"C4","sch":"5x2","ref":45,"d":["","D 06:00-15:00","M 14:30-23:30","M 14:00-23:00","","D 06:00-15:00","M 14:30-23:30"]},{"id":"C5","sch":"4x3","ref":42,"d":["N 20:00-06:30","N 20:00-06:30","N 20:00-06:30","","","","N 20:00-06:30"]},{"id":"C6","sch":"4x3","ref":45,"d":["","","D 07:30-18:45","N 13:30-00:00","M 12:00-23:15","M 12:00-23:15",""]}]},
+  {"n":6,"v":"6x1 + nocturno 4x3","sheet":"6 personas | 6x1 diurno/mixto + 4x3 nocturno","range":[0,24],"night":true,"note":"Combinación elegida por menor tramo continuo solo: 4 colaboradores 6x1 y 2 especialistas 4x3 nocturno.","ind":{"solo":"34 h 00 min","mx":"5 h 30 min","rest":"13 h 30 min","alert":"ALERTA: persisten periodos solo"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["M 16:00-23:30","M 15:30-23:00","","M 13:30-21:00","M 14:00-21:30","M 15:00-22:30","D 12:30-20:00"]},{"id":"C2","sch":"6x1","ref":45,"d":["M 13:30-21:00","","D 08:30-16:00","D 06:30-14:00","D 10:30-18:00","M 13:30-21:00","M 14:30-22:00"]},{"id":"C3","sch":"6x1","ref":45,"d":["D 06:00-13:30","D 06:30-14:00","D 06:00-13:30","M 14:30-22:00","","D 06:00-13:30","D 06:00-13:30"]},{"id":"C4","sch":"6x1","ref":45,"d":["D 08:00-15:30","D 11:30-19:00","","D 06:00-13:30","D 06:30-14:00","D 06:30-14:00","D 06:30-14:00"]},{"id":"C5","sch":"4x3","ref":42,"d":["N 20:00-06:30","N 20:00-06:30","N 20:00-06:30","","","","N 20:00-06:30"]},{"id":"C6","sch":"4x3","ref":42,"d":["","","N 13:30-00:00","N 20:00-06:30","N 20:00-06:30","N 20:00-06:30",""]}]},
+  {"n":6,"v":"6x1 + 4x3 noc-mix","sheet":"6 personas | 6x1 diurno/mixto + 4x3 nocturno/mixto","range":[0,24],"night":true,"note":"4 colaboradores 6x1 y 2 especialistas 4x3 combinando Nocturno y Mixto para mejorar traslapes.","ind":{"solo":"33 h 30 min","mx":"6 h 30 min","rest":"12 h 00 min","alert":"ALERTA: persisten periodos solo"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["M 16:00-23:30","","D 07:00-14:30","D 06:00-13:30","M 16:00-23:30","D 13:00-20:30","D 12:30-20:00"]},{"id":"C2","sch":"6x1","ref":45,"d":["D 12:00-19:30","M 16:00-23:30","M 16:00-23:30","D 13:00-20:30","","M 16:00-23:30","M 16:00-23:30"]},{"id":"C3","sch":"6x1","ref":45,"d":["","D 06:30-14:00","D 06:00-13:30","D 08:30-16:00","D 06:30-14:00","D 06:00-13:30","D 06:00-13:30"]},{"id":"C4","sch":"6x1","ref":45,"d":["D 06:30-14:00","","M 13:30-21:00","M 16:00-23:30","D 12:30-20:00","D 08:00-15:30","D 08:30-16:00"]},{"id":"C5","sch":"4x3","ref":42,"d":["N 20:00-06:30","N 20:00-06:30","N 20:00-06:30","","","","N 20:00-06:30"]},{"id":"C6","sch":"4x3","ref":42,"d":["","M 09:00-20:15","","N 20:00-06:30","N 20:00-06:30","N 20:00-06:30",""]}]},
+  {"n":7,"v":"Opción 1 | Horario semanal optimizado","sheet":"7P Opción 1 | Horario semanal optimizado","range":[0,24],"night":true,"note":"","ind":{"solo":"2 h 00 min","mx":"0 h 30 min","rest":"13 h 00 min","alert":"ALERTA: no fue posible eliminar todos los periodos solo"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["D 12:30-20:00","D 09:00-16:30","D 12:30-20:00","M 15:30-23:00","M 16:00-23:30","","D 12:30-20:00"]},{"id":"C2","sch":"6x1","ref":45,"d":["D 06:30-14:00","D 13:00-20:30","M 16:00-23:30","","D 06:00-13:30","D 06:00-13:30","D 07:00-14:30"]},{"id":"C3","sch":"6x1","ref":45,"d":["D 06:00-13:30","D 06:00-13:30","D 06:00-13:30","D 06:00-13:30","","D 07:00-14:30","D 06:00-13:30"]},{"id":"C4","sch":"5x2","ref":45,"d":["","D 06:00-15:00","D 06:30-15:30","N 23:00-07:24","N 23:00-07:24","N 23:00-07:24",""]},{"id":"C5","sch":"5x2","ref":45,"d":["","M 14:30-23:30","","D 06:30-15:30","D 07:00-16:00","M 14:00-23:00","M 14:30-23:30"]},{"id":"C6","sch":"4x3","ref":42,"d":["N 20:00-06:30","N 20:00-06:30","N 20:00-06:30","","","","N 20:00-06:30"]},{"id":"C7","sch":"4x3","ref":42,"d":["N 13:30-00:00","","","N 13:30-00:00","N 13:30-00:00","N 13:30-00:00",""]}]},
+  {"n":7,"v":"Opción 2 | Horario semanal optimizado","sheet":"7P Opción 2 | Horario semanal optimizado","range":[0,24],"night":true,"note":"","ind":{"solo":"2 h 00 min","mx":"0 h 30 min","rest":"13 h 30 min","alert":"ALERTA: no fue posible eliminar todos los periodos solo"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["D 06:00-13:30","D 06:30-14:00","D 06:00-13:30","D 06:00-13:30","","D 06:30-14:00","D 06:00-13:30"]},{"id":"C2","sch":"6x1","ref":45,"d":["D 06:30-14:00","D 06:00-13:30","D 12:30-20:00","","D 06:30-14:00","D 06:00-13:30","D 07:00-14:30"]},{"id":"C3","sch":"6x1","ref":45,"d":["M 14:00-21:30","D 12:30-20:00","","D 06:30-14:00","D 06:00-13:30","D 12:30-20:00","D 12:30-20:00"]},{"id":"C4","sch":"5x2","ref":45,"d":["","M 14:30-23:30","M 14:30-23:30","N 23:00-07:24","N 23:00-07:24","N 23:00-07:24",""]},{"id":"C5","sch":"5x2","ref":45,"d":["","","D 06:30-15:30","M 14:00-23:00","M 14:00-23:00","M 14:00-23:00","M 14:30-23:30"]},{"id":"C6","sch":"4x3","ref":42,"d":["N 20:00-06:30","N 20:00-06:30","N 20:00-06:30","","","","N 20:00-06:30"]},{"id":"C7","sch":"4x3","ref":42,"d":["N 13:30-00:00","","","N 13:30-00:00","N 13:30-00:00","N 13:30-00:00",""]}]},
+  {"n":8,"v":"Opción 1 | Horario semanal optimizado","sheet":"8P Opción 1 | Horario semanal optimizado","range":[0,24],"night":true,"note":"","ind":{"solo":"1 h 30 min","mx":"0 h 30 min","rest":"12 h 30 min","alert":"ALERTA: no fue posible eliminar todos los periodos solo"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["","D 06:00-13:30","D 06:00-13:30","M 16:00-23:30","D 12:00-19:30","M 15:30-23:00","M 13:30-21:00"]},{"id":"C2","sch":"6x1","ref":45,"d":["D 06:30-14:00","D 06:00-13:30","D 13:00-20:30","","D 06:00-13:30","D 08:30-16:00","D 08:30-16:00"]},{"id":"C3","sch":"6x1","ref":45,"d":["D 06:00-13:30","M 16:00-23:30","M 16:00-23:30","D 12:00-19:30","","D 06:00-13:30","D 07:00-14:30"]},{"id":"C4","sch":"5x2","ref":45,"d":["","D 10:30-19:30","D 09:30-18:30","N 23:00-07:24","N 23:00-07:24","N 23:00-07:24",""]},{"id":"C5","sch":"5x2","ref":45,"d":["","D 11:00-20:00","","D 06:00-15:00","D 07:00-16:00","D 06:00-15:00","D 06:00-15:00"]},{"id":"C6","sch":"5x2","ref":45,"d":["M 13:30-22:30","","D 06:30-15:30","D 06:30-15:30","M 14:00-23:00","M 14:30-23:30",""]},{"id":"C7","sch":"4x3","ref":42,"d":["N 20:00-06:30","N 20:00-06:30","N 20:00-06:30","","","","N 20:00-06:30"]},{"id":"C8","sch":"4x3","ref":42,"d":["N 13:30-00:00","","","N 13:30-00:00","N 13:30-00:00","","N 13:30-00:00"]}]},
+  {"n":8,"v":"Opción 2 | Horario semanal optimizado","sheet":"8P Opción 2 | Horario semanal optimizado","range":[0,24],"night":true,"note":"","ind":{"solo":"1 h 30 min","mx":"0 h 30 min","rest":"12 h 00 min","alert":"ALERTA: no fue posible eliminar todos los periodos solo"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["","D 06:30-14:00","D 06:30-14:00","D 06:30-14:00","D 06:00-13:30","D 06:00-13:30","M 15:00-22:30"]},{"id":"C2","sch":"6x1","ref":45,"d":["D 06:00-13:30","D 12:30-20:00","D 10:00-17:30","D 06:00-13:30","D 07:00-14:30","","D 06:00-13:30"]},{"id":"C3","sch":"6x1","ref":45,"d":["D 06:30-14:00","M 13:30-21:00","M 13:30-21:00","D 11:30-19:00","M 16:00-23:30","D 11:30-19:00",""]},{"id":"C4","sch":"5x2","ref":45,"d":["","D 06:00-15:00","D 06:00-15:00","N 23:00-07:24","N 23:00-07:24","N 23:00-07:24",""]},{"id":"C5","sch":"5x2","ref":45,"d":["","D 09:30-18:30","M 14:30-23:30","M 14:30-23:30","","D 06:30-15:30","D 07:00-16:00"]},{"id":"C6","sch":"5x2","ref":45,"d":["M 12:30-21:30","M 14:30-23:30","","M 14:00-23:00","M 12:00-21:00","M 14:00-23:00",""]},{"id":"C7","sch":"4x3","ref":42,"d":["N 20:00-06:30","N 20:00-06:30","N 20:00-06:30","","","","N 20:00-06:30"]},{"id":"C8","sch":"4x3","ref":42,"d":["N 13:30-00:00","","","","N 13:30-00:00","N 13:30-00:00","N 13:30-00:00"]}]},
+  {"n":9,"v":"Opción 1 | Horario semanal optimizado","sheet":"9P Opción 1 | Horario semanal optimizado","range":[0,24],"night":true,"note":"","ind":{"solo":"0 h 00 min","mx":"0 h 00 min","rest":"12 h 00 min","alert":"Sin alerta"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["D 06:30-14:00","","D 06:00-13:30","D 08:00-15:30","D 07:00-14:30","D 10:30-18:00","D 06:00-13:30"]},{"id":"C2","sch":"6x1","ref":45,"d":["D 06:00-13:30","D 13:00-20:30","D 13:00-20:30","D 10:00-17:30","D 06:00-13:30","D 07:00-14:30",""]},{"id":"C3","sch":"6x1","ref":45,"d":["D 10:30-18:00","M 16:00-23:30","M 14:00-21:30","M 16:00-23:30","","M 16:00-23:30","D 11:30-19:00"]},{"id":"C4","sch":"5x2","ref":45,"d":["M 12:00-21:00","","D 06:00-15:00","N 23:00-07:24","N 23:00-07:24","N 23:00-07:24",""]},{"id":"C5","sch":"5x2","ref":45,"d":["D 07:30-16:30","D 06:00-15:00","","D 06:30-15:30","M 14:00-23:00","","D 06:30-15:30"]},{"id":"C6","sch":"5x2","ref":45,"d":["","D 06:00-15:00","D 08:00-17:00","D 06:00-15:00","","D 09:00-18:00","M 13:30-22:30"]},{"id":"C7","sch":"4x3","ref":42,"d":["N 20:00-06:30","N 20:00-06:30","N 20:00-06:30","","","","N 20:00-06:30"]},{"id":"C8","sch":"4x3","ref":45,"d":["N 13:30-00:00","","N 13:30-00:00","","","D 06:00-17:15","N 13:30-00:00"]},{"id":"C9","sch":"4x3","ref":42,"d":["","N 13:30-00:00","","N 13:30-00:00","N 13:30-00:00","N 13:30-00:00",""]}]},
+  {"n":9,"v":"Opción 2 | Horario semanal optimizado","sheet":"9P Opción 2 | Horario semanal optimizado","range":[0,24],"night":true,"note":"","ind":{"solo":"0 h 00 min","mx":"0 h 00 min","rest":"12 h 00 min","alert":"Sin alerta"},"rows":[{"id":"C1","sch":"6x1","ref":45,"d":["D 07:00-14:30","D 10:00-17:30","D 07:00-14:30","D 06:30-14:00","D 10:30-18:00","M 15:30-23:00",""]},{"id":"C2","sch":"6x1","ref":45,"d":["D 06:00-13:30","D 06:00-13:30","D 06:00-13:30","","D 06:00-13:30","D 08:30-16:00","D 06:00-13:30"]},{"id":"C3","sch":"6x1","ref":45,"d":["D 06:30-14:00","D 06:00-13:30","D 06:00-13:30","D 07:00-14:30","D 06:00-13:30","D 06:00-13:30",""]},{"id":"C4","sch":"5x2","ref":45,"d":["D 09:00-18:00","D 08:30-17:30","","N 23:00-07:24","N 23:00-07:24","N 23:00-07:24",""]},{"id":"C5","sch":"5x2","ref":45,"d":["D 07:30-16:30","","M 14:30-23:30","M 14:30-23:30","M 14:30-23:30","","D 06:30-15:30"]},{"id":"C6","sch":"5x2","ref":45,"d":["M 12:00-21:00","M 13:00-22:00","","D 06:00-15:00","","D 06:30-15:30","M 14:00-23:00"]},{"id":"C7","sch":"4x3","ref":42,"d":["N 20:00-06:30","N 20:00-06:30","N 20:00-06:30","","","","N 20:00-06:30"]},{"id":"C8","sch":"4x3","ref":45,"d":["M 12:00-23:15","N 13:30-00:00","","","N 13:30-00:00","","N 13:30-00:00"]},{"id":"C9","sch":"4x3","ref":42,"d":["N 13:30-00:00","","N 13:30-00:00","N 13:30-00:00","","N 13:30-00:00",""]}]}
+];
+
+const P = (s) => { if (!s) return null; const [ty, rg] = s.split(" "); const [a, b] = rg.split("-"); const t = (x) => { const [hh, mm] = x.split(":"); return +hh + (+mm) / 60; }; let x = t(a), y = t(b); if (y <= x) y += 24; return [x, y, ty]; };
+const FH = (x) => (Math.round(x * 100) / 100) + " h";
+const SL = 20;
+const HM = (x) => { x = ((x % 24) + 24) % 24; const hh = Math.floor(x + 1e-6), mm = Math.round((x - hh) * 60); return String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0"); };
+const DUR = (min) => { const hh = Math.floor(min / 60), mm = min % 60; if (!min) return "0 min"; return (hh ? hh + " h" : "") + (hh && mm ? " " : "") + (mm ? mm + " min" : ""); };
+const pad = (n) => String(n).padStart(2, "0");
+
+TPL.forEach((t, k) => {
+  t.idx = k; t.start = 3 + k * 3; t.v = t.v.split(" | ")[0];
+  t.op = t.night ? "24 horas" : HM(t.range[0]) + " – 00:00";
+  t.kick = "Plantilla " + pad(k + 1) + " · Tienda " + t.op + " · " + t.v;
+  t.rows = t.rows.map((r) => { const seg = r.d.map(P); const durs = seg.filter(Boolean).map((s) => s[1] - s[0]);
+    return { id: r.id, sch: r.sch, ref: r.ref, seg, hrs: durs.reduce((a, b) => a + b, 0), over: durs.filter((x) => x > SCH[r.sch].lim + 1e-6).length }; });
+  t.over = t.rows.reduce((a, r) => a + r.over, 0);
+  const cnt = {}; t.rows.forEach((r) => (cnt[r.sch] = (cnt[r.sch] || 0) + 1));
+  t.schs = Object.keys(SCH).filter((s) => cnt[s]);
+  t.mix = t.schs.map((s) => s + " ×" + cnt[s]).join(" · ");
+  t.mixLong = t.schs.map((s) => cnt[s] + " en " + s).join(" · ");
+  t.cov = []; t.stat = [];
+  for (let d = 0; d < 7; d++) {
+    const c = [];
+    for (let i = 0; i < 24 * SL; i++) {
+      const hh = i / SL + 0.01; let n = 0;
+      t.rows.forEach((r) => { const a = r.seg[d]; if (a && hh >= a[0] && hh < Math.min(a[1], 24)) n++; const p = r.seg[(d + 6) % 7]; if (p && p[1] > 24 && hh < p[1] - 24) n++; });
+      c.push(n);
+    }
+    let gap = 0, run = 0, mx = 0, peak = 0, solo = 0;
+    for (let i = t.range[0] * SL; i < t.range[1] * SL; i++) {
+      const hh = i / SL, night = t.night && hh < 6;
+      if (c[i] === 0) gap += 3; peak = Math.max(peak, c[i]);
+      if (c[i] === 1 && !night) { run += 3; solo += 3; mx = Math.max(mx, run); } else run = 0;
+    }
+    t.cov.push(c); t.stat.push({ gap, mx, peak, solo });
+  }
+  t.peak = Math.max(...t.stat.map((s) => s.peak));
+  t.mx = Math.max(...t.stat.map((s) => s.mx));
+  t.solo = t.stat.reduce((a, s) => a + s.solo, 0);
+  t.gap = t.stat.reduce((a, s) => a + s.gap, 0);
+});
+const NO_OT = TPL.every((t) => !t.over);
+const TOTAL = 3 + TPL.length * 3;
+const covColor = (t, n, hh) => n >= 3 ? COV[3] : (n === 1 && t.night && hh < 6 ? COV.night : COV[n]);
+
+const R = (typeof window !== "undefined" && window.__resources) || {};
+
+class Component extends DCLogic {
+  state = { i: 0, s: 0.45, day: 0, mob: typeof window !== "undefined" && window.innerWidth < 700, ph: 1200, coach: true };
+
+  constructor(p) {
+    super(p);
+    ["stageRef","underRef","flipRef","frontRef","scrimRef","barRef","mainRef","zoneL","zoneR","sideL","sideR","nextRef"].forEach((k) => (this[k] = React.createRef()));
+    this.busy = false;
+    try { const v = +localStorage.getItem("plantillas_guia_v2_page"); if (v > 0 && v < TOTAL) this.state.i = v; if (localStorage.getItem("plantillas_v2_coach")) this.state.coach = false; } catch (e) {}
+  }
+
+  // ---------- piezas comunes ----------
+  get L() { const m = this.state.mob; return { m, PW: m ? MW : W, PH: m ? this.state.ph : H, CW: m ? MW - 36 : 688 }; }
+  btn(txt, fn, primary, key) {
+    const m = this.state.mob;
+    return h("button", { key: key || txt, onClick: fn, style: { fontFamily: F, fontSize: m ? 15 : 17, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", padding: m ? "14px 16px" : "16px 22px", minHeight: 50, cursor: "pointer", textAlign: "center", background: primary ? ACC : "#fff", color: primary ? "#fff" : ACC, border: "2px solid " + ACC } }, txt);
+  }
+  frame(key, o, body) {
+    const { m, PW, PH } = this.L, s = this.state.s;
+    return h("div", { key, style: { position: "absolute", inset: 0, overflow: "hidden", background: o.bg || "#fff" } },
+      h("div", { style: { position: "absolute", left: 0, top: 0, width: PW, height: PH, transform: "scale(" + s + ")", transformOrigin: "0 0", display: "flex", flexDirection: "column", padding: m ? "16px 18px 0" : "52px 56px 34px", fontFamily: F, color: INK } },
+        h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, minHeight: o.back ? 36 : 0 } },
+          h("div", { style: { fontSize: m ? 11 : 13, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: ACC, lineHeight: 1.35, minWidth: 0 } }, o.kicker),
+          o.back ? h("button", { onClick: () => this.goTo(2), style: { flex: "none", fontFamily: F, fontSize: 12, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", padding: "0 12px", height: 36, background: "#fff", color: ACC, border: "2px solid " + ACC, cursor: "pointer" } }, "← Índice") : null),
+        h("div", { style: { display: "flex", flexDirection: m ? "column" : "row", alignItems: m ? "flex-start" : "baseline", justifyContent: "space-between", gap: m ? 4 : 16, marginTop: m ? 6 : 10 } },
+          h("h2", { style: { fontSize: m ? 32 : 54, fontWeight: 800, lineHeight: 1, letterSpacing: "-0.02em", margin: 0 } }, o.title),
+          o.sub ? h("div", { style: { fontSize: m ? 14 : 18, fontWeight: 600, color: MUT } }, o.sub) : null),
+        h("div", { style: { height: 2, background: INK, marginTop: m ? 12 : 20, flex: "none" } }),
+        h("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: m ? 22 : 30, paddingTop: m ? 16 : 30, paddingBottom: m ? 24 : 0, overflowY: m ? "auto" : "hidden", overscrollBehavior: "contain", WebkitOverflowScrolling: "touch" } }, body),
+        m ? null : h("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: MUT, borderTop: "1px solid #d7d3d3", paddingTop: 14 } },
+          h("span", null, "Plantillas de horario · Guía para líderes"),
+          h("span", null, pad(o.page + 1) + " / " + pad(TOTAL)))
+      )
+    );
+  }
+  label(txt, extra) { return h("div", { style: Object.assign({ fontSize: this.state.mob ? 12 : 13, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: INK, marginBottom: this.state.mob ? 10 : 14 }, extra) }, txt); }
+  tap(txt) { return h("div", { style: { display: "flex", alignItems: "center", gap: 8, fontSize: this.state.mob ? 13 : 14, fontWeight: 700, color: ACC, marginBottom: 10 } }, h("span", { style: { width: 10, height: 10, borderRadius: 5, background: ACC, flex: "none" } }), txt); }
+  swatch(bg, txt, border) {
+    return h("div", { key: txt, style: { display: "flex", alignItems: "center", gap: 8, fontSize: this.state.mob ? 13 : 14 } },
+      h("span", { style: { width: 16, height: 16, background: bg, border: border ? "1px solid #bab6b6" : "none", flex: "none" } }), txt);
+  }
+  step(t) { const L = t.range[1] - t.range[0]; return this.state.mob ? (L > 18 ? 4 : 4) : (L > 18 ? 3 : 2); }
+  axis(t, CW, x0) {
+    const [r0, r1] = t.range, L = r1 - r0, st = this.step(t), m = this.state.mob, out = [];
+    for (let hh = r0; hh <= r1; hh += st) out.push(h("span", { key: hh, style: { position: "absolute", left: x0 + (hh - r0) / L * CW, transform: "translateX(-50%)", fontSize: m ? 11 : 12, fontWeight: 600, color: MUT } }, m ? String(hh % 24).padStart(2, "0") : HM(hh)));
+    return h("div", { style: { position: "relative", height: 18 } }, out);
+  }
+  grid(t, CW, x0) {
+    const [r0, r1] = t.range, L = r1 - r0, st = this.step(t), out = [];
+    for (let hh = r0; hh <= r1; hh += st) out.push(h("div", { key: hh, style: { position: "absolute", top: 0, bottom: 0, left: x0 + (hh - r0) / L * CW, width: 1, background: "#e6e3e2" } }));
+    return out;
+  }
+
+  // ---------- portada ----------
+  cover() {
+    const { m, PW, PH } = this.L;
+    return h("div", { key: "cover", style: { position: "absolute", inset: 0, background: BG, overflow: "hidden" } },
+      h("div", { style: { position: "absolute", left: 0, top: 0, width: PW, height: PH, transform: "scale(" + this.state.s + ")", transformOrigin: "0 0", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: m ? "28px 22px 24px" : "64px 64px 56px", borderLeft: (m ? 10 : 14) + "px solid " + ACC, fontFamily: F, color: INK, overflowY: m ? "auto" : "hidden" } },
+        h("div", { style: { fontSize: m ? 13 : 15, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: ACC } }, "Guía 2026"),
+        h("div", null,
+          h("div", { style: { height: 2, background: INK, marginBottom: m ? 22 : 34 } }),
+          h("h1", { style: { fontWeight: 800, fontSize: m ? 54 : 96, lineHeight: 0.96, letterSpacing: "-0.03em", margin: 0 } }, "Plantillas", h("br"), "de horario"),
+          h("p", { style: { fontSize: m ? 18 : 26, lineHeight: 1.35, maxWidth: "24ch", margin: (m ? 18 : 30) + "px 0 0", color: "#4a4644" } }, "Cómo organizar a tu equipo para que la tienda nunca se quede sin cobertura."),
+          h("div", { style: { display: "flex", gap: 8, marginTop: m ? 22 : 40, flexWrap: "wrap" } },
+            [TPL.length + " plantillas", "De 5 a 9 personas", "Tiendas de 16, 17, 18 y 24 h", "Esquemas 6x1 · 5x2 · 4x3"].map((s) => h("span", { key: s, style: { fontSize: m ? 13 : 15, fontWeight: 700, padding: m ? "6px 10px" : "8px 14px", border: "2px solid " + INK } }, s))),
+          h("div", { style: { display: "grid", gridTemplateColumns: m ? "1fr" : "1fr 1fr", gap: 10, marginTop: m ? 26 : 44 } },
+            this.btn("Empezar →", () => this.goTo(1), true, "go"),
+            this.btn("Elegir mi plantilla", () => this.goTo(2), false, "ix")),
+          h("div", { style: { fontSize: m ? 13 : 15, color: MUT, marginTop: 12 } }, "También puedes deslizar la página hacia la izquierda.")),
+        h("div", { style: { display: "flex", justifyContent: "space-between", fontSize: m ? 11 : 14, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: MUT, marginTop: 20 } },
+          h("span", null, "Líderes de tienda"), h("span", null, "Operación de tiendas"))
+      ));
+  }
+
+  // ---------- cómo leer ----------
+  legend() {
+    const m = this.state.mob;
+    const row = (left, title, desc, k) => h("div", { key: k, style: { display: "grid", gridTemplateColumns: (m ? 104 : 150) + "px 1fr", gap: m ? 14 : 24, alignItems: "center", padding: m ? "10px 0" : "11px 0", borderBottom: "1px solid #d7d3d3" } }, left,
+      h("div", null, h("div", { style: { fontSize: m ? 16 : 22, fontWeight: 800, lineHeight: 1.2 } }, title), h("div", { style: { fontSize: m ? 14 : 17, color: "#4a4644", marginTop: 4, lineHeight: 1.35, textWrap: "pretty" } }, desc)));
+    const chip = (ty, txt) => h("div", { style: { background: TYPE[ty].bg, color: TYPE[ty].fg, padding: m ? "10px 4px" : "12px 10px", textAlign: "center", fontWeight: 800, fontSize: m ? 13 : 17 } }, txt);
+    const cov = (bg, n, fg) => h("div", { style: { background: bg, color: fg, height: m ? 38 : 46, display: "grid", placeItems: "center", fontWeight: 800, fontSize: m ? 16 : 18, border: bg === "#fff" ? "1px solid #bab6b6" : "none" } }, n);
+    return this.frame("legend", { kicker: "Antes de empezar", title: "Cómo leer la guía", page: 1 }, [
+      h("div", { key: "a" }, this.label("Tipos de turno"),
+        row(chip("D", "06:00 – 13:30"), "Diurno", TYPE.D.d, 1),
+        row(chip("M", "15:30 – 23:00"), "Mixto", TYPE.M.d, 2),
+        row(chip("N", "20:00 – 06:30"), "Nocturno", TYPE.N.d, 3),
+        row(h("div", { style: { background: SUR, color: MUT, padding: m ? "10px 4px" : "12px 10px", textAlign: "center", fontWeight: 700, fontSize: m ? 12 : 14, letterSpacing: "0.1em", textTransform: "uppercase" } }, "Descanso"), "Descanso", "El día libre de la semana de cada colaborador.", 4)),
+      h("div", { key: "b" }, this.label("Esquemas y tiempo extra"),
+        Object.keys(SCH).map((s, k) => row(
+          h("div", { style: { background: SCH[s].bg, color: SCH[s].fg, padding: m ? "8px 10px" : "10px 12px", display: "flex", alignItems: "baseline", justifyContent: "space-between" } },
+            h("span", { style: { fontSize: m ? 20 : 26, fontWeight: 800 } }, s), h("span", { style: { fontSize: m ? 12 : 15, fontWeight: 700 } }, SCH[s].ot + " h")),
+          s + " · " + SCH[s].lim + " h diarias + 0.5 h de margen", SCH[s].d, "s" + k)),
+        h("p", { style: { fontSize: m ? 13 : 15, color: "#4a4644", margin: "12px 0 0", textWrap: "pretty" } }, "La media hora de margen aplica únicamente al turno diurno." + (NO_OT ? " Ningún turno de esta guía supera el límite diario de su esquema." : ""))),
+      h("div", { key: "c" }, this.label("Personas en tienda"),
+        h("div", { style: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: m ? 6 : 10 } },
+          [["#fff", "0", INK, "Sin cobertura"], [COV[1], "1", "#fff", "Una sola persona"], [COV[2], "2", INK, "Dos personas"], [COV[3], "3+", "#fff", "Tres o más"]].map(([bg, n, fg, t], k) =>
+            h("div", { key: k }, cov(bg, n, fg), h("div", { style: { fontSize: m ? 12 : 14, marginTop: 6, fontWeight: 600, lineHeight: 1.25 } }, t)))),
+        h("p", { style: { fontSize: m ? 13 : 16, color: "#4a4644", margin: "14px 0 0" } }, "En tiendas 24 horas, la madrugada (00:00 – 06:00) con una persona se marca en gris oscuro: así está diseñada.")),
+      m ? h("div", { key: "go" }, this.btn("Elegir mi plantilla →", () => this.goTo(2), true)) : null
+    ]);
+  }
+
+  // ---------- selector ----------
+  picker() {
+    const m = this.state.mob;
+    const group = (title, list, k) => h("div", { key: k },
+      this.label(title),
+      h("div", { style: { display: "grid", gridTemplateColumns: m ? "1fr" : "1fr 1fr", gap: 8 } },
+        list.map((t) => h("button", { key: t.idx, onClick: () => this.goTo(t.start),
+          style: { display: "grid", gridTemplateColumns: "40px minmax(0,1fr) auto", alignItems: "center", gap: 12, padding: "10px 12px", minHeight: m ? 64 : 62, background: SUR, border: "none", borderLeft: "6px solid " + ACC, fontFamily: F, color: INK, textAlign: "left", cursor: "pointer" } },
+          h("div", { style: { fontSize: 38, fontWeight: 800, lineHeight: 1, letterSpacing: "-0.03em" } }, t.n),
+          h("div", { style: { minWidth: 0 } }, h("div", { style: { fontSize: m ? 16 : 17, fontWeight: 800, lineHeight: 1.15 } }, t.night ? t.v : "Tienda " + t.v),
+            h("div", { style: { fontSize: 12, color: "#4a4644", marginTop: 3 } }, t.mix + " · solo máx. " + DUR(t.mx))),
+          h("div", { style: { fontSize: 13, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: "#fff", background: ACC, padding: "8px 10px", whiteSpace: "nowrap" } }, "Ver →")))));
+    return this.frame("picker", { kicker: "Índice", title: "¿Qué plantilla uso?", page: 2 }, [
+      h("div", { key: "s", style: { display: "grid", gridTemplateColumns: m ? "1fr" : "1fr 1fr", gap: m ? 10 : 16 } },
+        [["1", "¿A qué hora abre y cierra tu tienda?"], ["2", "¿Cuántas personas tienes en tu equipo?"]].map(([n, t]) =>
+          h("div", { key: n, style: { display: "flex", gap: 12, alignItems: "center" } },
+            h("span", { style: { width: 32, height: 32, background: INK, color: BG, display: "grid", placeItems: "center", fontWeight: 800, fontSize: 16, flex: "none" } }, n),
+            h("span", { style: { fontSize: m ? 16 : 19, fontWeight: 600, lineHeight: 1.3 } }, t)))),
+      h("div", { key: "g" }, this.tap("Toca tu opción para abrir su plantilla"),
+        h("div", { style: { display: "flex", flexDirection: "column", gap: m ? 20 : 26 } },
+          group("5 personas · Tienda de 16, 17 o 18 horas", TPL.filter((t) => !t.night), "g1"),
+          group("Tienda 24 horas · 6 a 9 personas", TPL.filter((t) => t.night), "g2"))),
+      h("p", { key: "p", style: { fontSize: m ? 13 : 14, color: "#4a4644", margin: 0 } }, "“Solo máx.” es el tramo más largo con una sola persona entre 06:00 y 00:00.")
+    ]);
+  }
+
+  // ---------- plantilla: semana ----------
+  week(t) {
+    const m = this.state.mob;
+    const cols = m ? "52px repeat(7, minmax(0,1fr))" : "88px repeat(7, minmax(0,1fr)) 90px", G = m ? 3 : 4;
+    const head = h("div", { style: { display: "grid", gridTemplateColumns: cols, gap: G, fontSize: m ? 11 : 12, fontWeight: 700, letterSpacing: m ? "0.04em" : "0.12em", textTransform: "uppercase", color: MUT } },
+      h("span", null, m ? "" : "Equipo"), DAYS.map((d) => h("span", { key: d, style: { textAlign: "center" } }, d)), m ? null : h("span", { style: { textAlign: "right" } }, "Horas"));
+    const RH = m ? 50 : t.rows.length > 7 ? 60 : t.rows.length > 6 ? 70 : 80;
+    const st = (r) => r.over ? "T. extra" : (r.ref != null && Math.abs(r.hrs - r.ref) > 0.01 ? "Ref. " + FH(r.ref) : "Cumple");
+    const rows = t.rows.map((r) => h("div", { key: r.id, style: { display: "grid", gridTemplateColumns: cols, gap: G, alignItems: "stretch" } },
+      h("div", { style: { display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-start", gap: m ? 3 : 5 } },
+        h("div", { style: { fontSize: m ? 17 : 24, fontWeight: 800, lineHeight: 1 } }, r.id),
+        h("span", { style: { fontSize: m ? 10 : 11, fontWeight: 800, padding: "2px 5px", background: SCH[r.sch].bg, color: SCH[r.sch].fg } }, r.sch),
+        m ? h("span", { style: { fontSize: 10, fontWeight: 700, color: r.over ? ACC : MUT, whiteSpace: "nowrap" } }, FH(r.hrs)) : null),
+      r.seg.map((s, d) => {
+        if (!s) return h("div", { key: d, style: { background: SUR, color: "#9b9797", display: "grid", placeItems: "center", fontSize: m ? 9 : 11, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", minHeight: RH } }, "Desc.");
+        const ty = TYPE[s[2]];
+        return h("div", { key: d, style: { background: ty.bg, color: ty.fg, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: RH, lineHeight: 1.15 } },
+          h("span", { style: { fontSize: m ? 12 : 20, fontWeight: 800 } }, HM(s[0])), h("span", { style: { fontSize: m ? 11 : 15, fontWeight: 600, opacity: 0.85 } }, HM(s[1])));
+      }),
+      m ? null : h("div", { style: { display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-end" } },
+        h("div", { style: { fontSize: 20, fontWeight: 800, whiteSpace: "nowrap" } }, FH(r.hrs)),
+        h("div", { style: { fontSize: 10, fontWeight: 700, color: r.over ? ACC : MUT, letterSpacing: "0.04em", textTransform: "uppercase", textAlign: "right", whiteSpace: "nowrap" } }, st(r)))));
+    const rest = h("div", { style: { display: "grid", gridTemplateColumns: cols, gap: G, borderTop: "2px solid " + INK, paddingTop: 10 } },
+      h("div", { style: { fontSize: m ? 9 : 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" } }, "Descansa"),
+      DAYS.map((d, k) => h("div", { key: d, style: { textAlign: "center", fontSize: m ? 11 : 17, fontWeight: 800, lineHeight: 1.25 } }, t.rows.filter((r) => !r.seg[k]).map((r) => r.id).join(m ? " " : ", ") || "—")), m ? null : h("span", null));
+    const stat = (l, v, fs) => h("div", { key: l, style: { borderTop: "2px solid " + INK, paddingTop: m ? 8 : 10 } },
+      h("div", { style: { fontSize: m ? 11 : 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: MUT } }, l),
+      h("div", { style: { fontSize: m ? 18 : (fs || 28), fontWeight: 800, marginTop: 4, whiteSpace: "nowrap" } }, v));
+    return this.frame("w" + t.idx, { kicker: t.kick, title: t.n + " personas", sub: "1 de 3 · Semana completa", page: t.start, back: true }, [
+      h("div", { key: "st", style: { display: "grid", gridTemplateColumns: m ? "1fr 1fr" : "repeat(4, 1fr)", gap: m ? 12 : 16 } },
+        stat("Colaboradores", t.n), stat("Operación", t.op, t.night ? 28 : 22), stat("Esquemas", t.schs.join(" · "), t.schs.length > 2 ? 20 : t.schs.length > 1 ? 24 : 28), stat("Sin cobertura", t.gap + " min")),
+      h("div", { key: "tb", style: { display: "flex", flexDirection: "column", gap: m ? 5 : 8 } }, head, rows, rest),
+      h("div", { key: "lg", style: { display: "flex", gap: m ? 14 : 22, flexWrap: "wrap" } },
+        this.swatch(TYPE.D.bg, "Diurno"), this.swatch(TYPE.M.bg, "Mixto"), this.swatch(TYPE.N.bg, "Nocturno"), this.swatch(SUR, "Descanso")),
+      m ? h("div", { key: "go" }, this.btn("Ver un día hora por hora →", () => this.goTo(t.start + 1), true)) : null
+    ]);
+  }
+
+  // ---------- plantilla: un día ----------
+  dayView(t) {
+    const m = this.state.mob, d = this.state.day, [r0, r1] = t.range, L = r1 - r0, LW = m ? 36 : 64, CW = this.L.CW - LW;
+    const X = (hh) => (Math.max(r0, Math.min(r1, hh)) - r0) / L * CW;
+    const tabs = h("div", { style: { display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: m ? 4 : 6 } },
+      DAYS.map((nm, k) => h("button", { key: nm, onClick: () => this.setState({ day: k }),
+        style: { fontFamily: F, fontSize: m ? 13 : 16, fontWeight: 800, padding: 0, height: m ? 44 : 48, cursor: "pointer", border: "2px solid " + (k === d ? INK : ACC), background: k === d ? INK : "#fff", color: k === d ? BG : ACC } }, nm)));
+    const BP = m ? 5 : t.rows.length > 7 ? 6 : 9, RH = m ? 38 : t.rows.length > 7 ? 44 : t.rows.length > 6 ? 54 : 60;
+    const bar = (a, b, ty, txt, k) => h("div", { key: k, style: { position: "absolute", top: BP, bottom: BP, left: LW + X(a), width: Math.max(2, X(b) - X(a)), background: TYPE[ty].bg, color: TYPE[ty].fg, fontSize: m ? 11 : 14, fontWeight: 700, display: "flex", alignItems: "center", paddingLeft: m ? 4 : 8, overflow: "hidden", whiteSpace: "nowrap" } }, txt);
+    const rows = t.rows.map((r) => {
+      const segs = [], s = r.seg[d], p = r.seg[(d + 6) % 7];
+      if (p && p[1] > 24 && r0 < p[1] - 24) segs.push(bar(0, p[1] - 24, p[2], (m ? "→ " : "hasta ") + HM(p[1]), "p"));
+      if (s) segs.push(bar(s[0], Math.min(s[1], 24), s[2], HM(s[0]) + (m ? "–" : " – ") + HM(s[1]), "s"));
+      if (!segs.length) segs.push(h("div", { key: "x", style: { position: "absolute", left: LW, right: 0, top: BP, bottom: BP, display: "flex", alignItems: "center", paddingLeft: 10, fontSize: m ? 11 : 13, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9b9797", background: "repeating-linear-gradient(135deg, #f3f2f2 0 8px, #fff 8px 16px)" } }, "Descanso"));
+      return h("div", { key: r.id, style: { position: "relative", height: RH, borderBottom: "1px solid #eae9e9" } },
+        h("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, display: "flex", alignItems: "center", fontSize: m ? 14 : 20, fontWeight: 800 } }, r.id), segs);
+    });
+    const c = t.cov[d], CH = m ? 130 : t.rows.length > 7 ? 160 : 190, unit = CH / Math.max(3, t.peak), slots = [];
+    for (let i = r0 * SL; i < r1 * SL;) { let j = i; const col = covColor(t, c[i], i / SL); while (j < r1 * SL && c[j] === c[i] && covColor(t, c[j], j / SL) === col) j++; slots.push(h("div", { key: i, style: { flex: j - i, height: c[i] * unit, background: col } })); i = j; }
+    const yl = []; for (let n = 1; n <= Math.max(3, t.peak); n++) yl.push(h("div", { key: n, style: { position: "absolute", left: 0, right: 0, bottom: n * unit, borderTop: "1px dashed #d7d3d3" } }, h("span", { style: { position: "absolute", left: -LW, width: LW - 10, textAlign: "right", top: -9, fontSize: m ? 11 : 12, fontWeight: 700, color: MUT } }, n)));
+    const sd = t.stat[d];
+    const box = (l, v) => h("div", { key: l, style: { background: SUR, padding: m ? "10px 10px" : "14px 16px" } },
+      h("div", { style: { fontSize: m ? 10 : 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: MUT, lineHeight: 1.3 } }, l),
+      h("div", { style: { fontSize: m ? 17 : 26, fontWeight: 800, marginTop: 6 } }, v));
+    return this.frame("d" + t.idx, { kicker: t.kick, title: t.n + " personas", sub: "2 de 3 · Un día, hora por hora", page: t.start + 1, back: true }, [
+      h("div", { key: "tb" }, this.tap("Toca un día para ver sus turnos"), tabs),
+      h("div", { key: "g" }, this.label("Turnos del " + DAYS_L[d].toLowerCase()),
+        h("div", { style: { position: "relative" } }, this.grid(t, CW, LW), rows), this.axis(t, CW, LW)),
+      h("div", { key: "c" }, this.label("Personas en tienda"),
+        h("div", { style: { position: "relative", marginLeft: LW, height: CH, display: "flex", alignItems: "flex-end", borderBottom: "2px solid " + INK } }, yl, slots),
+        this.axis(t, CW, LW)),
+      h("div", { key: "s", style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: m ? 6 : 10, marginTop: "auto" } },
+        box("Sin cobertura", DUR(sd.gap)),
+        box(m ? "Máx. con 1 persona" : (t.night ? "Tramo más largo con 1 persona (06:00 – 00:00)" : "Tramo más largo con 1 persona"), DUR(sd.mx)),
+        box(m ? "Máx. a la vez" : "Máximo de personas a la vez", sd.peak)),
+      m ? h("div", { key: "go" }, this.btn("Ver cobertura y reglas →", () => this.goTo(t.start + 2), true)) : null
+    ]);
+  }
+
+  // ---------- plantilla: cobertura y reglas ----------
+  rules(t) {
+    const m = this.state.mob, [r0, r1] = t.range, LW = m ? 34 : 58, RW = m ? 66 : 168, CW = this.L.CW - LW - RW, cells = (r1 - r0) * 2;
+    const heat = DAYS.map((nm, d) => {
+      const c = t.cov[d], cs = [], sd = t.stat[d], bad = sd.gap || sd.mx;
+      for (let j = 0; j < cells; j++) { const i = r0 * SL + j * (SL / 2), n = Math.min(...c.slice(i, i + SL / 2)); cs.push(h("div", { key: j, style: { flex: 1, background: covColor(t, n, i / SL), border: n === 0 ? "1px solid " + ACC : "none" } })); }
+      return h("div", { key: nm, style: { display: "grid", gridTemplateColumns: LW + "px " + CW + "px " + RW + "px", alignItems: "center", height: m ? 28 : 36 } },
+        h("span", { style: { fontSize: m ? 12 : 15, fontWeight: 800 } }, nm),
+        h("div", { style: { display: "flex", gap: 1, height: m ? 22 : 30 } }, cs),
+        h("div", { style: { display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 } },
+          h("span", { style: { fontSize: m ? 11 : 14, fontWeight: m ? 800 : 700, whiteSpace: "nowrap", color: m && bad ? ACC : INK } }, DUR(sd.mx)),
+          m ? null : h("span", { style: { fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", background: bad ? ACC : INK, color: "#fff", padding: "3px 6px" } }, sd.gap ? "Hueco" : sd.mx ? "Alerta" : "OK")));
+    });
+    const nl = [];
+    if (t.note) nl.push(t.note);
+    nl.push("Esquemas: " + t.mixLong + ".");
+    nl.push(t.over ? t.over + " turno(s) superan el límite diario de su esquema y generan tiempo extra." : "Ningún turno supera el límite diario de su esquema (6x1: 7.5 h · 5x2: 9 h · 4x3: 11.5 h): no se genera tiempo extra.");
+    if (t.night) {
+      const g = [];
+      t.rows.forEach((r) => { const m = {}; r.seg.forEach((s, d) => { if (s && s[1] > 24) { const k = HM(s[0]) + " – " + HM(s[1]); (m[k] = m[k] || []).push(DAYS[d].toLowerCase()); } });
+        Object.keys(m).forEach((k) => g.push(r.id + " " + m[k].join(", ") + " (" + k + ")")); });
+      nl.push("Madrugada: " + g.join(" · ") + ".");
+    }
+    const diff = t.rows.filter((r) => r.ref != null && Math.abs(r.hrs - r.ref) > 0.01);
+    if (diff.length) nl.push("Horas semanales distintas a la referencia: " + diff.map((r) => r.id + " " + FH(r.hrs) + " (ref. " + FH(r.ref) + ")").join(", ") + ".");
+    nl.push(t.solo ? "Tiempo total con una sola persona en la semana: " + DUR(t.solo) + (t.night ? ", entre 06:00 y 00:00." : ".") : "Nunca queda una sola persona entre 06:00 y 00:00.");
+    const notes = nl.map((n, k) => h("div", { key: k, style: { display: "grid", gridTemplateColumns: (m ? 30 : 44) + "px 1fr", gap: 10, padding: m ? "10px 0" : "11px 0", borderBottom: "1px solid #d7d3d3" } },
+      h("span", { style: { fontSize: m ? 14 : 16, fontWeight: 800, color: ACC } }, pad(k + 1)),
+      h("span", { style: { fontSize: m ? 14 : 16, lineHeight: 1.4, textWrap: "pretty" } }, n)));
+    const sw = [this.swatch(COV[1], "1 persona"), this.swatch(COV[2], "2 personas"), this.swatch(COV[3], "3 o más")];
+    if (t.night) sw.push(this.swatch(COV.night, "Madrugada: 1 persona por diseño"));
+    const nxt = TPL[t.idx + 1];
+    return this.frame("r" + t.idx, { kicker: t.kick, title: t.n + " personas", sub: "3 de 3 · Cobertura y reglas", page: t.start + 2, back: true }, [
+      h("div", { key: "h" },
+        h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } }, this.label("Cobertura de la semana"),
+          h("span", { style: { fontSize: m ? 10 : 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: MUT, marginBottom: m ? 10 : 14 } }, m ? "Máx. solo" : "Máx. con 1 persona")),
+        heat,
+        h("div", { style: { marginRight: RW } }, this.axis(t, CW, LW)),
+        h("div", { style: { display: "flex", gap: m ? 12 : 18, flexWrap: "wrap", marginTop: 12 } }, sw)),
+      h("div", { key: "v", style: { display: "grid", gridTemplateColumns: m ? "1fr 1fr" : "repeat(4, 1fr)", background: INK, color: BG } },
+        [["Sin cobertura", DUR(t.gap)], ["Tiempo extra", t.over ? t.over + " turnos" : "0 turnos"], ["Máx. con 1 persona", DUR(t.mx)], ["Descanso mín.", t.ind ? t.ind.rest : "≥ 12 h"]].map(([l, v], k) =>
+          h("div", { key: k, style: { padding: m ? "12px 12px" : "14px 16px", borderLeft: (m ? k % 2 : k) ? "1px solid #444141" : "none", borderTop: m && k > 1 ? "1px solid #444141" : "none" } },
+            h("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#bab6b6" } }, l),
+            h("div", { style: { fontSize: m ? 17 : 19, fontWeight: 800, marginTop: 4, color: k === 1 ? (t.over ? ACC : "#ff9783") : BG } }, v)))),
+      h("div", { key: "n" }, this.label("Notas operativas", { marginBottom: 4 }), notes),
+      m ? h("div", { key: "go", style: { display: "grid", gap: 8 } },
+        nxt ? this.btn("Siguiente plantilla →", () => this.goTo(nxt.start), true, "nx") : null,
+        this.btn("Volver al índice", () => this.goTo(2), false, "ix")) : null
+    ]);
+  }
+
+  coachEl() {
+    if (!this.state.coach) return null;
+    const close = () => { try { localStorage.setItem("plantillas_v2_coach", "1"); } catch (e) {} this.setState({ coach: false }); };
+    const stop = (e) => e.stopPropagation();
+    const item = (k, a, b) => h("div", { key: k, style: { display: "grid", gridTemplateColumns: "28px 1fr", gap: 10, alignItems: "start" } },
+      h("span", { style: { width: 28, height: 28, background: ACC, color: "#fff", display: "grid", placeItems: "center", fontWeight: 800, fontSize: 14 } }, k),
+      h("div", null, h("div", { style: { fontSize: 15, fontWeight: 800 } }, a), h("div", { style: { fontSize: 14, color: "#4a4644", marginTop: 2, lineHeight: 1.35 } }, b)));
+    return h("div", { onClick: close, onPointerDown: stop, onPointerUp: stop, style: { position: "absolute", inset: 0, zIndex: 30, background: "rgba(15,14,14,0.86)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
+      h("div", { onClick: stop, style: { background: BG, color: INK, width: "min(360px, 100%)", maxHeight: "100%", overflowY: "auto", padding: "22px 20px", borderTop: "6px solid " + ACC, fontFamily: F, display: "flex", flexDirection: "column", gap: 16 } },
+        h("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: ACC } }, "Cómo usar la guía"),
+        h("div", { style: { position: "relative", height: 64, background: "#fff", border: "2px solid " + INK, overflow: "hidden" } },
+          h("div", { style: { position: "absolute", top: 18, left: "50%", marginLeft: -14, width: 28, height: 28, borderRadius: 14, background: ACC, boxShadow: "0 0 0 6px rgba(236,48,19,0.2)", animation: "swipeHint 1.6s ease-in-out infinite" } }),
+          h("div", { style: { position: "absolute", bottom: 4, left: 0, right: 0, textAlign: "center", fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: MUT } }, "Desliza")),
+        item("1", "Cambia de página", "Desliza hacia la izquierda o toca «Siguiente» abajo."),
+        item("2", "Elige tu plantilla", "Toca «Índice» arriba en cualquier momento."),
+        item("3", "Lo rojo se toca", "Botones y opciones con borde o fondo rojo te llevan a otra página."),
+        h("button", { onClick: close, style: { fontFamily: F, fontSize: 15, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", height: 50, background: ACC, color: "#fff", border: "none", cursor: "pointer" } }, "Entendido")));
+  }
+
+  pages() {
+    const out = [this.cover(), this.legend(), this.picker()];
+    TPL.forEach((t) => out.push(this.week(t), this.dayView(t), this.rules(t)));
+    return out;
+  }
+
+  componentDidMount() {
+    this.paint();
+    const el = this.stageRef.current;
+    if (el && typeof ResizeObserver !== "undefined") {
+      this.ro = new ResizeObserver(() => this.fit());
+      this.ro.observe(el);
+    }
+    this.fit(); requestAnimationFrame(() => this.fit()); setTimeout(() => this.fit(), 300);
+    this.onWin = () => this.fit(); window.addEventListener("resize", this.onWin);
+    this.onKey = (e) => {
+      if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); this.next(); }
+      if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); this.prev(); }
+      
+      if (e.key.toLowerCase() === "f") this.toggleFull();
+    };
+    window.addEventListener("keydown", this.onKey);
+  }
+  fit() {
+    const el = this.stageRef.current; if (!el) return;
+    const mob = window.innerWidth < 700;
+    el.style.aspectRatio = mob ? "auto" : "2 / 3"; el.style.width = mob ? "100%" : "";
+    if (this.mainRef.current) this.mainRef.current.style.padding = mob ? "0" : "24px clamp(16px, 7vw, 96px)";
+    [this.zoneL, this.zoneR, this.sideL, this.sideR].forEach((r) => { if (r.current) r.current.style.display = mob ? "none" : ""; });
+    if (this.nextRef.current) this.nextRef.current.style.animation = this.state.i === 0 && !this.state.coach ? "pulseNext 1.6s ease-in-out infinite" : "none";
+    const s = el.clientWidth / (mob ? MW : W), ph = mob ? el.clientHeight / s : H;
+    if (s && (Math.abs(s - this.state.s) > 0.001 || mob !== this.state.mob || Math.abs(ph - this.state.ph) > 1)) this.setState({ s, mob, ph });
+  }
+  componentWillUnmount() { window.removeEventListener("keydown", this.onKey); window.removeEventListener("resize", this.onWin); if (this.ro) this.ro.disconnect(); }
+  componentDidUpdate() {
+    this.paint();
+  }
+  paint() {
+    this.fit();
+    if (this.barRef.current) this.barRef.current.style.width = ((this.state.i + 1) / TOTAL * 100) + "%";
+    try { localStorage.setItem("plantillas_guia_v2_page", String(this.state.i)); } catch (e) {}
+  }
+
+  next() { this.goTo(this.state.i + 1); }
+  prev() { this.goTo(this.state.i - 1); }
+  toggleFull() {
+    const el = document.documentElement;
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  }
+
+  goTo(target) {
+    const cur = this.state.i;
+    if (this.busy || target === cur || target < 0 || target >= TOTAL) return;
+    const dir = target > cur ? 1 : -1;
+    const flip = this.flipRef.current, scrim = this.scrimRef.current;
+    if (!flip) { this.setState({ i: target }); return; }
+    this.busy = true;
+    this.flipFace = dir > 0 ? cur : target;
+    this.underIndex = dir > 0 ? target : cur;
+    this.forceUpdate();
+    requestAnimationFrame(() => {
+      flip.style.transition = "none";
+      flip.style.visibility = "visible";
+      flip.style.transform = dir > 0 ? "rotateY(0deg)" : "rotateY(-172deg)";
+      if (scrim) { scrim.style.transition = "none"; scrim.style.opacity = dir > 0 ? "0" : "0.5"; }
+      requestAnimationFrame(() => {
+        const ease = "cubic-bezier(.42,.02,.24,1)";
+        flip.style.transition = "transform " + FLIP_MS + "ms " + ease;
+        flip.style.transform = dir > 0 ? "rotateY(-172deg)" : "rotateY(0deg)";
+        if (scrim) { scrim.style.transition = "opacity " + FLIP_MS + "ms " + ease; scrim.style.opacity = dir > 0 ? "0.5" : "0"; }
+        setTimeout(() => {
+          flip.style.transition = "none";
+          flip.style.visibility = "hidden";
+          if (scrim) { scrim.style.transition = "none"; scrim.style.opacity = "0"; }
+          this.flipFace = null; this.underIndex = null; this.busy = false;
+          this.setState({ i: target });
+        }, FLIP_MS + 20);
+      });
+    });
+  }
+
+  renderVals() {
+    const pages = this.pages();
+    const i = this.state.i;
+    const under = this.underIndex == null ? i : this.underIndex;
+    const face = this.flipFace == null ? i : this.flipFace;
+    return {
+      counter: (i + 1) + " / " + TOTAL,
+      coach: this.coachEl(),
+      mainRef: this.mainRef, zoneL: this.zoneL, zoneR: this.zoneR, sideL: this.sideL, sideR: this.sideR, nextRef: this.nextRef,
+      underContent: pages[under],
+      frontContent: pages[face],
+      stageRef: this.stageRef, underRef: this.underRef, flipRef: this.flipRef,
+      frontRef: this.frontRef, scrimRef: this.scrimRef, barRef: this.barRef,
+      next: () => this.next(),
+      prev: () => this.prev(),
+      openIndex: () => this.goTo(2),
+      toggleFull: () => this.toggleFull(),
+      onDown: (e) => { this.px = e.clientX; this.py = e.clientY; this.pt = Date.now(); },
+      onUp: (e) => {
+        if (this.px == null) return;
+        const dx = e.clientX - this.px, dy = e.clientY - this.py, dt = Date.now() - this.pt;
+        this.px = null;
+        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4 && dt < 900) this.goTo(this.state.i + (dx < 0 ? 1 : -1));
+      }
+    };
+  }
+}
+
+</script>
+</body>
+</html>
