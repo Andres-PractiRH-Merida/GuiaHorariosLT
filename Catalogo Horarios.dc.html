@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700;800&amp;display=swap">
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #1a1918; overscroll-behavior: none; font-family: "Archivo", system-ui, sans-serif; }
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  a { color: #ae1800; text-decoration: none; }
+  a:hover { color: #ec3013; }
+  @media print { html, body { background: #fff; } }
+</style>
+</helmet>
+<div style="position: fixed; inset: 0; display: grid; grid-template-rows: auto 1fr auto; background: #1a1918; font-family: 'Archivo', system-ui, sans-serif; color: #f3f2f2; user-select: none; overflow: hidden;">
+
+  <header style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 14px 20px; border-bottom: 2px solid rgba(243,242,242,0.18);">
+    <div style="display: flex; align-items: baseline; gap: 12px; min-width: 0;">
+      <span style="font-weight: 700; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap;">Plantillas de Horario</span>
+      <span style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(243,242,242,0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Guía para líderes de tienda</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <button onClick="{{ openIndex }}" style="display: flex; align-items: center; gap: 8px; font-family: inherit; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #f3f2f2; background: transparent; border: 2px solid rgba(243,242,242,0.28); padding: 7px 12px; cursor: pointer;" style-hover="border-color: #ec3013; color: #ec3013;">¿Qué plantilla uso?</button>
+      <button onClick="{{ openShare }}" style="display: flex; align-items: center; gap: 8px; font-family: inherit; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #f3f2f2; background: transparent; border: 2px solid rgba(243,242,242,0.28); padding: 7px 12px; cursor: pointer;" style-hover="border-color: #ec3013; color: #ec3013;">Compartir</button>
+      <button onClick="{{ toggleFull }}" style="display: flex; align-items: center; gap: 8px; font-family: inherit; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #f3f2f2; background: transparent; border: 2px solid rgba(243,242,242,0.28); padding: 7px 12px; cursor: pointer;" style-hover="border-color: #ec3013; color: #ec3013;">Pantalla completa</button>
+    </div>
+  </header>
+
+  <main onPointerDown="{{ onDown }}" onPointerUp="{{ onUp }}" style="position: relative; display: grid; place-items: center; padding: 24px clamp(16px, 7vw, 96px); min-height: 0;">
+
+    <div ref="{{ stageRef }}" style="position: relative; height: 100%; aspect-ratio: 2 / 3; max-width: 100%; perspective: 2400px; perspective-origin: 50% 50%;">
+
+      <div style="position: absolute; inset: 0; background: #0f0e0e; box-shadow: 0 30px 80px rgba(0,0,0,0.55);"></div>
+
+      <div ref="{{ underRef }}" style="position: absolute; inset: 0; background: #ffffff; overflow: hidden;">
+        {{ underContent }}
+      </div>
+      <div ref="{{ scrimRef }}" style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0) 45%); opacity: 0; pointer-events: none;"></div>
+
+      <div ref="{{ flipRef }}" style="position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: left center; will-change: transform; pointer-events: none; visibility: hidden;">
+        <div ref="{{ frontRef }}" style="position: absolute; inset: 0; backface-visibility: hidden; background: #ffffff; overflow: hidden; box-shadow: 8px 0 40px rgba(0,0,0,0.4);">
+          {{ frontContent }}
+        </div>
+        <div style="position: absolute; inset: 0; backface-visibility: hidden; transform: rotateY(180deg); background: linear-gradient(90deg, #e8e6e4, #f7f6f5 60%, #ddd9d6); box-shadow: -8px 0 40px rgba(0,0,0,0.4);"></div>
+      </div>
+
+      <div onClick="{{ prev }}" style="position: absolute; left: 0; top: 0; bottom: 0; width: 6%; cursor: w-resize;"></div>
+      <div onClick="{{ next }}" style="position: absolute; right: 0; top: 0; bottom: 0; width: 6%; cursor: e-resize;"></div>
+    </div>
+
+    <button onClick="{{ prev }}" style="position: absolute; left: clamp(4px, 1.6vw, 28px); top: 50%; transform: translateY(-50%); width: 48px; height: 48px; display: grid; place-items: center; background: transparent; border: 2px solid rgba(243,242,242,0.28); color: #f3f2f2; cursor: pointer;" style-hover="border-color: #ec3013; color: #ec3013;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M15 18l-6-6 6-6"></path></svg>
+    </button>
+    <button onClick="{{ next }}" style="position: absolute; right: clamp(4px, 1.6vw, 28px); top: 50%; transform: translateY(-50%); width: 48px; height: 48px; display: grid; place-items: center; background: transparent; border: 2px solid rgba(243,242,242,0.28); color: #f3f2f2; cursor: pointer;" style-hover="border-color: #ec3013; color: #ec3013;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><path d="M9 18l6-6-6-6"></path></svg>
+    </button>
+  </main>
+
+  <footer style="display: flex; align-items: center; justify-content: center; gap: 20px; padding: 12px 20px 16px; border-top: 2px solid rgba(243,242,242,0.18);">
+    <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.16em;">{{ counter }}</span>
+    <div style="width: min(320px, 40vw); height: 2px; background: rgba(243,242,242,0.2);">
+      <div ref="{{ barRef }}" style="height: 2px; background: #ec3013; width: 0%;"></div>
+    </div>
+    <span style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(243,242,242,0.45);">{{ hint }}</span>
+  </footer>
+
+  <sc-if value="{{ shareOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeShare }}" style="position: fixed; inset: 0; background: rgba(15,14,14,0.82); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 40; overflow: auto;">
+      <div onClick="{{ stop }}" style="background: #f3f2f2; color: #201e1d; padding: clamp(20px, 4vh, 32px); width: min(420px, 100%); max-height: calc(100vh - 40px); overflow: auto; border-top: 6px solid #ec3013;">
+        <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #ec3013;">Compartir guía</div>
+        <div style="font-size: 26px; font-weight: 700; line-height: 1.1; margin: 8px 0 20px;">Escanea o copia el enlace</div>
+        <div style="display: grid; place-items: center; padding: 18px; background: #fff; border: 2px solid #201e1d;">
+          <canvas ref="{{ qrModalRef }}" style="display: block; width: 200px; height: 200px;"></canvas>
+        </div>
+        <div style="font-size: 12px; line-height: 1.5; word-break: break-all; margin: 14px 0 18px; color: #4a4644; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{{ shareUrl }}</div>
+        <div style="display: flex; gap: 10px;">
+          <button onClick="{{ copyLink }}" style="flex: 1; font-family: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; text-align: left; padding: 12px 14px; background: #ec3013; color: #fff; border: none; cursor: pointer;" style-hover="background: #c8250c;">{{ copyLabel }}</button>
+          <button onClick="{{ closeShare }}" style="font-family: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 12px 14px; background: transparent; color: #201e1d; border: 2px solid #201e1d; cursor: pointer;" style-hover="border-color: #ec3013; color: #ec3013;">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;shareUrl&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Compartir&quot;}}">
+const h = React.createElement;
+const W = 800, H = 1200, FLIP_MS = 780;
+const F = "Archivo, system-ui, sans-serif";
+const INK = "#201e1d", ACC = "#ec3013", MUT = "#6b6663", SUR = "#eae9e9", BG = "#f3f2f2";
+const DAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+const DAYS_L = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+const TYPE = {
+  D: { n: "Diurno", bg: "#ffe0d9", fg: "#7c1405", d: "Termina a más tardar a las 20:00 · 7.5 h diarias" },
+  M: { n: "Mixto", bg: "#ff9783", fg: "#4d170e", d: "Termina entre las 20:00 y las 23:30 · 7.5 h diarias" },
+  N: { n: "Nocturno", bg: "#201e1d", fg: "#f3f2f2", d: "Cubre el cierre o la madrugada · 7 h diarias (jornada N42)" }
+};
+const COV = { 0: "#ffffff", 1: ACC, 2: "#bab6b6", 3: "#605d5d", night: "#2d2b2b" };
+
+const TPL = [
+  { n: 4, op: "06:00 – 00:00", range: [6, 24], file: "Plantilla_Horario_4_Personas_Validada",
+    rows: [
+      ["C1", "6x1 · 45 h", 45, ["06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30",""]],
+      ["C2", "6x1 · 45 h", 45, ["08:30-17:00","08:30-17:00","","09:00-15:30","09:00-16:00","09:00-16:00","06:00-13:30"]],
+      ["C3", "6x1 · 45 h", 45, ["","17:00-00:00","12:00-19:30","12:00-19:30","12:00-19:30","12:00-20:00","12:00-19:30"]],
+      ["C4", "6x1 N42 · 42 h", 42, ["17:00-00:00","","17:00-00:00","17:00-00:00","17:00-00:00","17:00-00:00","17:00-00:00"]]
+    ],
+    notes: [
+      "Todos los colaboradores operan en esquema 6x1.",
+      "C4 trabaja 6 jornadas de 17:00-00:00: 42 horas semanales.",
+      "El martes C3 cubre el descanso del nocturno con la jornada completa N42 de 17:00-00:00.",
+      "C3 conserva 45 horas semanales mediante una jornada de 8 horas, cuatro de 7.5 horas y una cobertura N42 de 7 horas.",
+      "Cobertura continua de 06:00 a 00:00 validada todos los días, sin minutos sin cobertura."
+    ] },
+  { n: 5, op: "06:00 – 00:00", range: [6, 24], file: "Plantilla_Horario_5_Personas_Validada",
+    rows: [
+      ["C1", "6x1 · 45 h", 45, ["06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30",""]],
+      ["C2", "6x1 · 45 h", 45, ["07:30-15:00","07:30-15:00","","07:30-15:00","07:30-15:00","07:30-15:00","06:00-13:30"]],
+      ["C3", "6x1 · 45 h", 45, ["","11:00-18:30","11:00-18:30","11:00-18:30","11:00-18:30","11:00-18:30","09:30-17:00"]],
+      ["C4", "6x1 · 45 h", 45, ["14:30-22:00","15:00-00:00","14:30-22:00","","14:30-22:00","14:30-22:00","14:30-22:00"]],
+      ["C5", "6x1 N42 · 42 h", 42, ["17:00-00:00","","17:00-00:00","17:00-00:00","17:00-00:00","17:00-00:00","17:00-00:00"]]
+    ],
+    notes: [
+      "Cobertura continua de 06:00 a 00:00 todos los días.",
+      "El martes C4 cubre 15:00-00:00 para eliminar el hueco de 15:00 a 17:00.",
+      "C5 trabaja 6 jornadas de 7 horas: total 42 horas semanales.",
+      "El domingo se recorre C2 a 06:00-13:30 y C3 a 09:30-17:00 para asegurar apertura y continuidad."
+    ] },
+  { n: 6, op: "06:00 – 00:00", range: [6, 24], file: "Plantilla_Horario_6_Personas_Validada",
+    rows: [
+      ["C1", "6x1 · 45 h", 45, ["06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30",""]],
+      ["C2", "6x1 · 45 h", 45, ["07:30-15:00","07:30-15:00","","07:30-15:00","07:30-15:00","07:30-15:00","06:00-13:30"]],
+      ["C3", "6x1 · 45 h", 45, ["","10:00-17:30","10:00-17:30","10:00-17:30","10:00-17:30","10:00-17:30","10:00-17:30"]],
+      ["C4", "6x1 · 45 h", 45, ["12:00-19:30","12:00-19:30","12:00-19:30","","12:00-19:30","12:00-19:30","12:00-19:30"]],
+      ["C5", "6x1 · 45 h", 45, ["14:00-21:30","17:00-00:00","14:00-21:30","14:00-21:30","","14:00-22:00","14:00-21:30"]],
+      ["C6", "6x1 N42 · 42 h", 42, ["17:00-00:00","","17:00-00:00","17:00-00:00","17:00-00:00","17:00-00:00","17:00-00:00"]]
+    ],
+    notes: [
+      "Todos los colaboradores operan en esquema 6x1.",
+      "El colaborador nocturno trabaja 6 jornadas de 7 horas: 42 horas semanales.",
+      "Cuando otro colaborador cubre el descanso del nocturno, cubre 17:00-00:00 (7 horas, jornada N42).",
+      "El colaborador de respaldo conserva 45 horas semanales mediante un turno de 8 horas y cuatro turnos de 7.5 horas, además de la cobertura N42 de 7 horas.",
+      "Cobertura continua validada de 06:00 a 00:00, todos los días."
+    ] },
+  { n: 7, op: "06:00 – 00:00", range: [6, 24], file: "Plantilla_Horario_7_Personas_Validada",
+    rows: [
+      ["C1", "6x1 · 45 h", 45, ["06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30",""]],
+      ["C2", "6x1 · 45 h", 45, ["07:30-15:00","07:30-15:00","","07:30-15:00","07:30-15:00","07:30-15:00","06:00-13:30"]],
+      ["C3", "6x1 · 45 h", 45, ["","09:00-16:30","09:00-16:30","09:00-16:30","09:00-16:30","09:00-16:30","09:00-16:30"]],
+      ["C4", "6x1 · 45 h", 45, ["11:00-18:30","11:00-18:30","11:00-18:30","","11:00-18:30","11:00-18:30","11:00-18:30"]],
+      ["C5", "6x1 · 45 h", 45, ["13:00-20:30","13:00-20:30","13:00-20:30","13:00-20:30","13:00-20:30","","13:00-20:30"]],
+      ["C6", "6x1 · 45 h", 45, ["14:30-22:00","17:00-00:00","14:30-22:00","14:30-22:00","","14:00-22:00","14:30-22:00"]],
+      ["C7", "6x1 N42 · 42 h", 42, ["17:00-00:00","","17:00-00:00","17:00-00:00","17:00-00:00","17:00-00:00","17:00-00:00"]]
+    ],
+    notes: [
+      "Todos los colaboradores operan en esquema 6x1.",
+      "El colaborador nocturno trabaja 6 jornadas de 7 horas: 42 horas semanales.",
+      "Cuando otro colaborador cubre el descanso del nocturno, cubre 17:00-00:00 (7 horas, jornada N42).",
+      "El colaborador de respaldo conserva 45 horas semanales mediante un turno de 8 horas y cuatro turnos de 7.5 horas, además de la cobertura N42 de 7 horas.",
+      "Cobertura continua validada de 06:00 a 00:00, todos los días."
+    ] },
+  { n: 6, op: "24 horas", range: [0, 24], night: true, file: "Plantilla_24h_6_Personas_6x1_Optimizada_Un_Nocturno",
+    rows: [
+      ["C1", "Diurno · 45 h", 45, ["","06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30","06:00-13:30"]],
+      ["C2", "Diurno · 45 h", 45, ["06:00-13:30","","08:00-15:30","08:00-15:30","06:00-13:30","08:00-15:30","08:00-15:30"]],
+      ["C3", "Mixto / cobertura · 45 h", 45, ["08:00-15:30","08:00-15:30","","13:30-21:00","10:00-17:30","13:30-21:00","13:30-21:00"]],
+      ["C4", "Mixto · 45 h", 45, ["13:30-21:00","13:30-21:00","13:30-21:00","","13:30-21:00","15:30-23:00","15:30-23:00"]],
+      ["C5", "Mixto / respaldo N42 · 45 h", 45, ["15:00-23:00","15:30-23:00","15:30-23:00","15:30-23:00","15:30-23:00","","23:00-06:00"]],
+      ["C6", "Nocturno · 42 h", 42, ["23:00-06:00","23:00-06:00","23:00-06:00","23:00-06:00","23:00-06:00","23:00-06:00",""]]
+    ],
+    notes: [
+      "C6 es la única persona asignada al turno nocturno base: 23:00-06:00, 6 días, 42 horas semanales.",
+      "El domingo, día de descanso de C6, C5 cubre exactamente 23:00-06:00 (7 horas) y mantiene 45 horas semanales.",
+      "No hay traslapes nocturnos: durante 23:00-06:00 permanece exactamente una persona.",
+      "Cobertura continua 24/7, sin huecos, revisada en intervalos de 15 minutos.",
+      "Los traslapes se concentran entre 06:00 y 23:00 para reducir turnos solos; no hay jornadas con salida a las 04:00."
+    ] }
+];
+
+const P = (s) => { if (!s) return null; const [a, b] = s.split("-"); const t = (x) => { const [hh, mm] = x.split(":"); return +hh + (+mm) / 60; }; let x = t(a), y = t(b); if (y <= x) y += 24; return [x, y]; };
+const KIND = (a, b) => (b > 24 || (b >= 24 && a >= 17)) ? "N" : (b > 20 ? "M" : "D");
+const HM = (x) => { x = ((x % 24) + 24) % 24; const hh = Math.floor(x + 1e-6), mm = Math.round((x - hh) * 60); return String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0"); };
+const DUR = (min) => { const hh = Math.floor(min / 60), mm = min % 60; if (!min) return "0 min"; return (hh ? hh + " h" : "") + (hh && mm ? " " : "") + (mm ? mm + " min" : ""); };
+const pad = (n) => String(n).padStart(2, "0");
+
+TPL.forEach((t, k) => {
+  t.idx = k; t.start = 3 + k * 3;
+  t.rows = t.rows.map(([id, label, meta, d]) => { const seg = d.map(P); return { id, label, meta, seg, hrs: seg.reduce((s, x) => s + (x ? x[1] - x[0] : 0), 0) }; });
+  t.cov = []; t.stat = [];
+  for (let d = 0; d < 7; d++) {
+    const c = [];
+    for (let i = 0; i < 96; i++) {
+      const hh = i / 4 + 0.1; let n = 0;
+      t.rows.forEach((r) => { const a = r.seg[d]; if (a && hh >= a[0] && hh < Math.min(a[1], 24)) n++; const p = r.seg[(d + 6) % 7]; if (p && p[1] > 24 && hh < p[1] - 24) n++; });
+      c.push(n);
+    }
+    let gap = 0, run = 0, mx = 0, peak = 0;
+    for (let i = t.range[0] * 4; i < t.range[1] * 4; i++) {
+      const hh = i / 4, night = t.night && (hh >= 23 || hh < 6);
+      if (c[i] === 0) gap += 15; peak = Math.max(peak, c[i]);
+      if (c[i] === 1 && !night) { run += 15; mx = Math.max(mx, run); } else run = 0;
+    }
+    t.cov.push(c); t.stat.push({ gap, mx, peak });
+  }
+  t.peak = Math.max(...t.stat.map((s) => s.peak));
+});
+const TOTAL = 3 + TPL.length * 3 + 1;
+const covColor = (t, n, hh) => n >= 3 ? COV[3] : (n === 1 && t.night && (hh >= 23 || hh < 6) ? COV.night : COV[n]);
+
+const R = (typeof window !== "undefined" && window.__resources) || {};
+
+class Component extends DCLogic {
+  state = { i: 0, s: 0.6, day: 0, shareOpen: false, copied: false };
+
+  constructor(p) {
+    super(p);
+    ["stageRef","underRef","flipRef","frontRef","scrimRef","barRef","qrModalRef"].forEach((k) => (this[k] = React.createRef()));
+    this.busy = false;
+    try { const v = +localStorage.getItem("plantillas_guia_page"); if (v > 0 && v < TOTAL) this.state.i = v; } catch (e) {}
+  }
+
+  get shareUrl() {
+    if (this.props.shareUrl) return this.props.shareUrl;
+    if (typeof location === "undefined") return "";
+    return location.origin + location.pathname;
+  }
+
+  // ---------- piezas comunes ----------
+  frame(key, o, body) {
+    const s = this.state.s;
+    return h("div", { key, style: { position: "absolute", inset: 0, overflow: "hidden", background: o.bg || "#fff" } },
+      h("div", { style: { position: "absolute", left: 0, top: 0, width: W, height: H, transform: "scale(" + s + ")", transformOrigin: "0 0", display: "flex", flexDirection: "column", padding: "52px 56px 34px", fontFamily: F, color: INK } },
+        h("div", { style: { fontSize: 13, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: ACC } }, o.kicker),
+        h("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16, marginTop: 10 } },
+          h("h2", { style: { fontSize: 54, fontWeight: 800, lineHeight: 1, letterSpacing: "-0.02em", margin: 0 } }, o.title),
+          o.sub ? h("div", { style: { fontSize: 18, fontWeight: 600, color: MUT, textAlign: "right" } }, o.sub) : null),
+        h("div", { style: { height: 2, background: INK, marginTop: 20 } }),
+        h("div", { style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 30, marginTop: 30 } }, body),
+        h("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: MUT, borderTop: "1px solid #d7d3d3", paddingTop: 14 } },
+          h("span", null, "Plantillas de horario · Guía para líderes"),
+          h("span", null, pad(o.page + 1) + " / " + pad(TOTAL)))
+      )
+    );
+  }
+  label(txt, extra) { return h("div", { style: Object.assign({ fontSize: 13, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: INK, marginBottom: 14 }, extra) }, txt); }
+  swatch(bg, txt, border) {
+    return h("div", { key: txt, style: { display: "flex", alignItems: "center", gap: 8, fontSize: 14 } },
+      h("span", { style: { width: 18, height: 18, background: bg, border: border ? "1px solid #bab6b6" : "none", flex: "none" } }), txt);
+  }
+  axis(t, CW, x0) {
+    const [r0, r1] = t.range, L = r1 - r0, step = L > 18 ? 3 : 2, out = [];
+    for (let hh = r0; hh <= r1; hh += step) out.push(h("span", { key: hh, style: { position: "absolute", left: x0 + (hh - r0) / L * CW, transform: "translateX(-50%)", fontSize: 12, fontWeight: 600, color: MUT } }, HM(hh)));
+    return h("div", { style: { position: "relative", height: 18 } }, out);
+  }
+  grid(t, CW, x0) {
+    const [r0, r1] = t.range, L = r1 - r0, step = L > 18 ? 3 : 2, out = [];
+    for (let hh = r0; hh <= r1; hh += step) out.push(h("div", { key: hh, style: { position: "absolute", top: 0, bottom: 0, left: x0 + (hh - r0) / L * CW, width: 1, background: "#e6e3e2" } }));
+    return out;
+  }
+
+  // ---------- portada ----------
+  cover() {
+    return h("div", { key: "cover", style: { position: "absolute", inset: 0, background: BG, overflow: "hidden" } },
+      h("div", { style: { position: "absolute", left: 0, top: 0, width: W, height: H, transform: "scale(" + this.state.s + ")", transformOrigin: "0 0", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "64px 64px 56px", borderLeft: "14px solid " + ACC, fontFamily: F, color: INK } },
+        h("div", { style: { fontSize: 15, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: ACC } }, "Guía 2026"),
+        h("div", null,
+          h("div", { style: { height: 2, background: INK, marginBottom: 34 } }),
+          h("h1", { style: { fontWeight: 800, fontSize: 96, lineHeight: 0.96, letterSpacing: "-0.03em", margin: 0 } }, "Plantillas", h("br"), "de horario"),
+          h("p", { style: { fontSize: 26, lineHeight: 1.35, maxWidth: "24ch", margin: "30px 0 0", color: "#4a4644" } }, "Cómo organizar a tu equipo para que la tienda nunca se quede sin cobertura."),
+          h("div", { style: { display: "flex", gap: 10, marginTop: 40, flexWrap: "wrap" } },
+            TPL.map((t) => h("span", { key: t.idx, style: { fontSize: 15, fontWeight: 700, padding: "8px 14px", border: "2px solid " + INK } }, t.n + " personas · " + t.op))),
+          h("div", { style: { height: 2, background: INK, marginTop: 40 } })),
+        h("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 14, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: MUT } },
+          h("span", null, "Líderes de tienda"), h("span", null, "Operación de tiendas"))
+      ));
+  }
+
+  // ---------- cómo leer ----------
+  legend() {
+    const row = (left, title, desc, k) => h("div", { key: k, style: { display: "grid", gridTemplateColumns: "150px 1fr", gap: 24, alignItems: "center", padding: "16px 0", borderBottom: "1px solid #d7d3d3" } }, left,
+      h("div", null, h("div", { style: { fontSize: 22, fontWeight: 800 } }, title), h("div", { style: { fontSize: 17, color: "#4a4644", marginTop: 4, textWrap: "pretty" } }, desc)));
+    const chip = (ty, txt) => h("div", { style: { background: TYPE[ty].bg, color: TYPE[ty].fg, padding: "12px 10px", textAlign: "center", fontWeight: 800, fontSize: 17 } }, txt);
+    const days = h("div", { style: { display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3 } },
+      DAYS.map((d, k) => h("div", { key: k, style: { height: 34, background: k === 6 ? SUR : INK, color: k === 6 ? MUT : BG, fontSize: 11, fontWeight: 700, display: "grid", placeItems: "center" } }, d[0])));
+    const cov = (bg, n, fg) => h("div", { style: { background: bg, color: fg, height: 46, display: "grid", placeItems: "center", fontWeight: 800, fontSize: 18, border: bg === "#fff" ? "1px solid #bab6b6" : "none" } }, n);
+    return this.frame("legend", { kicker: "Antes de empezar", title: "Cómo leer la guía", page: 1 }, [
+      h("div", { key: "a" }, this.label("Tipos de turno"),
+        row(chip("D", "06:00 – 13:30"), "Diurno", TYPE.D.d, 1),
+        row(chip("M", "15:30 – 23:00"), "Mixto", TYPE.M.d, 2),
+        row(chip("N", "17:00 – 00:00"), "Nocturno", TYPE.N.d, 3),
+        row(h("div", { style: { background: SUR, color: MUT, padding: "12px 10px", textAlign: "center", fontWeight: 700, fontSize: 14, letterSpacing: "0.1em", textTransform: "uppercase" } }, "Descanso"), "Descanso", "El día libre de la semana de cada colaborador.", 4)),
+      h("div", { key: "b" }, this.label("Esquema y horas"),
+        row(days, "Esquema 6x1", "6 días de trabajo y 1 de descanso, todas las semanas.", 5),
+        row(h("div", { style: { fontSize: 40, fontWeight: 800, lineHeight: 1 } }, "45 h", h("span", { style: { fontSize: 22, color: MUT } }, " / 42 h")), "Meta semanal", "Diurno y mixto: 6 × 7.5 h = 45 h. Nocturno: 6 × 7 h = 42 h.", 6)),
+      h("div", { key: "c" }, this.label("Personas en tienda"),
+        h("div", { style: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 } },
+          [["#fff", "0", INK, "Sin cobertura"], [COV[1], "1", "#fff", "Una sola persona"], [COV[2], "2", INK, "Dos personas"], [COV[3], "3+", "#fff", "Tres o más"]].map(([bg, n, fg, t], k) =>
+            h("div", { key: k }, cov(bg, n, fg), h("div", { style: { fontSize: 14, marginTop: 8, fontWeight: 600 } }, t)))),
+        h("p", { style: { fontSize: 16, color: "#4a4644", margin: "16px 0 0" } }, "En la tienda 24 horas, el tramo nocturno con una persona se marca en gris oscuro: así está diseñado."))
+    ]);
+  }
+
+  // ---------- selector ----------
+  picker() {
+    const group = (title, list, k) => h("div", { key: k },
+      this.label(title),
+      h("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+        list.map((t) => h("button", { key: t.idx, onClick: () => this.goTo(t.start),
+          style: { display: "grid", gridTemplateColumns: "96px 1fr auto", alignItems: "center", gap: 20, padding: "16px 20px", background: SUR, border: "none", borderLeft: "6px solid " + ACC, fontFamily: F, color: INK, textAlign: "left", cursor: "pointer" } },
+          h("div", { style: { fontSize: 58, fontWeight: 800, lineHeight: 1, letterSpacing: "-0.03em" } }, t.n),
+          h("div", null, h("div", { style: { fontSize: 22, fontWeight: 800 } }, t.n + " personas"),
+            h("div", { style: { fontSize: 15, color: "#4a4644", marginTop: 4 } }, t.night ? "Un solo nocturno 23:00 – 06:00 · 0 min sin cobertura" : "1 nocturno de cierre (N42) · 0 min sin cobertura")),
+          h("div", { style: { fontSize: 14, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: ACC, whiteSpace: "nowrap" } }, "Pág. " + pad(t.start + 1) + " →")))));
+    return this.frame("picker", { kicker: "Índice", title: "¿Qué plantilla uso?", page: 2 }, [
+      h("div", { key: "s", style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 } },
+        [["1", "¿A qué hora abre y cierra tu tienda?"], ["2", "¿Cuántas personas tienes en tu equipo?"]].map(([n, t]) =>
+          h("div", { key: n, style: { display: "flex", gap: 14, alignItems: "flex-start" } },
+            h("span", { style: { width: 36, height: 36, background: INK, color: BG, display: "grid", placeItems: "center", fontWeight: 800, fontSize: 18, flex: "none" } }, n),
+            h("span", { style: { fontSize: 19, fontWeight: 600, lineHeight: 1.3 } }, t)))),
+      group("Tienda de 06:00 a 00:00 · 18 horas", TPL.filter((t) => !t.night), "g1"),
+      group("Tienda 24 horas", TPL.filter((t) => t.night), "g2"),
+      h("p", { key: "p", style: { fontSize: 16, color: "#4a4644", margin: 0 } }, "Toca una opción para ir directo a su plantilla. Cada una tiene 3 páginas: la semana, un día hora por hora y las reglas de cobertura.")
+    ]);
+  }
+
+  // ---------- plantilla: semana ----------
+  week(t) {
+    const cols = "92px repeat(7, minmax(0,1fr)) 74px";
+    const head = h("div", { style: { display: "grid", gridTemplateColumns: cols, gap: 4, fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: MUT } },
+      h("span", null, "Equipo"), DAYS.map((d) => h("span", { key: d, style: { textAlign: "center" } }, d)), h("span", { style: { textAlign: "right" } }, "Horas"));
+    const rows = t.rows.map((r) => h("div", { key: r.id, style: { display: "grid", gridTemplateColumns: cols, gap: 4, alignItems: "stretch" } },
+      h("div", { style: { display: "flex", flexDirection: "column", justifyContent: "center" } },
+        h("div", { style: { fontSize: 24, fontWeight: 800, lineHeight: 1 } }, r.id),
+        h("div", { style: { fontSize: 11, color: MUT, marginTop: 4, lineHeight: 1.25 } }, r.label)),
+      r.seg.map((s, d) => {
+        if (!s) return h("div", { key: d, style: { background: SUR, color: "#9b9797", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", minHeight: t.rows.length > 6 ? 70 : 80 } }, "Desc.");
+        const ty = TYPE[KIND(s[0], s[1])];
+        return h("div", { key: d, style: { background: ty.bg, color: ty.fg, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: t.rows.length > 6 ? 70 : 80, lineHeight: 1.15 } },
+          h("span", { style: { fontSize: 20, fontWeight: 800 } }, HM(s[0])), h("span", { style: { fontSize: 15, fontWeight: 600, opacity: 0.85 } }, HM(s[1])));
+      }),
+      h("div", { style: { display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-end" } },
+        h("div", { style: { fontSize: 22, fontWeight: 800 } }, Math.round(r.hrs * 10) / 10 + " h"),
+        h("div", { style: { fontSize: 11, fontWeight: 700, color: Math.abs(r.hrs - r.meta) < 0.01 ? "#4a4644" : ACC, letterSpacing: "0.06em", textTransform: "uppercase" } }, Math.abs(r.hrs - r.meta) < 0.01 ? "Cumple" : "Revisar"))));
+    const rest = h("div", { style: { display: "grid", gridTemplateColumns: cols, gap: 4, borderTop: "2px solid " + INK, paddingTop: 10 } },
+      h("div", { style: { fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" } }, "Descansa"),
+      DAYS.map((d, k) => h("div", { key: d, style: { textAlign: "center", fontSize: 17, fontWeight: 800 } }, t.rows.filter((r) => !r.seg[k]).map((r) => r.id).join(", ") || "—")), h("span", null));
+    const stat = (l, v) => h("div", { key: l, style: { borderTop: "2px solid " + INK, paddingTop: 10 } },
+      h("div", { style: { fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: MUT } }, l),
+      h("div", { style: { fontSize: 28, fontWeight: 800, marginTop: 4 } }, v));
+    const gap = t.stat.reduce((s, x) => s + x.gap, 0);
+    return this.frame("w" + t.idx, { kicker: "Plantilla " + pad(t.idx + 1) + " · Tienda " + t.op, title: t.n + " personas", sub: "1 · Semana completa", page: t.start }, [
+      h("div", { key: "st", style: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 } },
+        stat("Colaboradores", t.n), stat("Operación", t.op), stat("Esquema", "6x1"), stat("Sin cobertura", gap + " min")),
+      h("div", { key: "tb", style: { display: "flex", flexDirection: "column", gap: 8 } }, head, rows, rest),
+      h("div", { key: "lg", style: { display: "flex", gap: 22, flexWrap: "wrap" } },
+        this.swatch(TYPE.D.bg, "Diurno"), this.swatch(TYPE.M.bg, "Mixto"), this.swatch(TYPE.N.bg, "Nocturno"), this.swatch(SUR, "Descanso"))
+    ]);
+  }
+
+  // ---------- plantilla: un día ----------
+  dayView(t) {
+    const d = this.state.day, [r0, r1] = t.range, L = r1 - r0, LW = 64, CW = 688 - LW;
+    const X = (hh) => (Math.max(r0, Math.min(r1, hh)) - r0) / L * CW;
+    const tabs = h("div", { style: { display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 } },
+      DAYS.map((nm, k) => h("button", { key: nm, onClick: () => this.setState({ day: k }),
+        style: { fontFamily: F, fontSize: 16, fontWeight: 800, padding: "12px 0", cursor: "pointer", border: "2px solid " + INK, background: k === d ? INK : "#fff", color: k === d ? BG : INK } }, nm)));
+    const bar = (a, b, ty, txt, k) => h("div", { key: k, style: { position: "absolute", top: 9, bottom: 9, left: LW + X(a), width: Math.max(2, X(b) - X(a)), background: TYPE[ty].bg, color: TYPE[ty].fg, fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", paddingLeft: 8, overflow: "hidden", whiteSpace: "nowrap" } }, txt);
+    const rows = t.rows.map((r) => {
+      const segs = [], s = r.seg[d], p = r.seg[(d + 6) % 7];
+      if (p && p[1] > 24 && r0 < p[1] - 24) segs.push(bar(0, p[1] - 24, "N", "hasta " + HM(p[1]), "p"));
+      if (s) segs.push(bar(s[0], Math.min(s[1], 24), KIND(s[0], s[1]), HM(s[0]) + " – " + HM(s[1]), "s"));
+      if (!segs.length) segs.push(h("div", { key: "x", style: { position: "absolute", left: LW, right: 0, top: 9, bottom: 9, display: "flex", alignItems: "center", paddingLeft: 10, fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9b9797", background: "repeating-linear-gradient(135deg, #f3f2f2 0 8px, #fff 8px 16px)" } }, "Descanso"));
+      return h("div", { key: r.id, style: { position: "relative", height: t.rows.length > 6 ? 54 : 60, borderBottom: "1px solid #eae9e9" } },
+        h("div", { style: { position: "absolute", left: 0, top: 0, bottom: 0, display: "flex", alignItems: "center", fontSize: 20, fontWeight: 800 } }, r.id), segs);
+    });
+    const c = t.cov[d], CH = 190, unit = CH / Math.max(3, t.peak), slots = [];
+    for (let i = r0 * 4; i < r1 * 4;) { let j = i; const col = covColor(t, c[i], i / 4); while (j < r1 * 4 && c[j] === c[i] && covColor(t, c[j], j / 4) === col) j++; slots.push(h("div", { key: i, style: { flex: j - i, height: c[i] * unit, background: col } })); i = j; }
+    const yl = []; for (let n = 1; n <= Math.max(3, t.peak); n++) yl.push(h("div", { key: n, style: { position: "absolute", left: 0, right: 0, bottom: n * unit, borderTop: "1px dashed #d7d3d3" } }, h("span", { style: { position: "absolute", left: -LW, width: LW - 12, textAlign: "right", top: -9, fontSize: 12, fontWeight: 700, color: MUT } }, n)));
+    const st = t.stat[d];
+    const box = (l, v) => h("div", { key: l, style: { background: SUR, padding: "14px 16px" } },
+      h("div", { style: { fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: MUT, lineHeight: 1.3 } }, l),
+      h("div", { style: { fontSize: 26, fontWeight: 800, marginTop: 6 } }, v));
+    return this.frame("d" + t.idx, { kicker: "Plantilla " + pad(t.idx + 1) + " · Tienda " + t.op, title: t.n + " personas", sub: "2 · Un día, hora por hora", page: t.start + 1 }, [
+      h("div", { key: "tb" }, this.label("Elige un día"), tabs),
+      h("div", { key: "g" }, this.label("Turnos del " + DAYS_L[d].toLowerCase()),
+        h("div", { style: { position: "relative" } }, this.grid(t, CW, LW), rows), this.axis(t, CW, LW)),
+      h("div", { key: "c" }, this.label("Personas en tienda"),
+        h("div", { style: { position: "relative", marginLeft: LW, height: CH, display: "flex", alignItems: "flex-end", borderBottom: "2px solid " + INK } }, yl, slots),
+        this.axis(t, CW, LW)),
+      h("div", { key: "s", style: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: "auto" } },
+        box("Tiempo sin cobertura", DUR(st.gap)),
+        box(t.night ? "Tramo más largo con 1 persona (fuera de noche)" : "Tramo más largo con 1 persona", DUR(st.mx)),
+        box("Máximo de personas a la vez", st.peak))
+    ]);
+  }
+
+  // ---------- plantilla: cobertura y reglas ----------
+  rules(t) {
+    const [r0, r1] = t.range, LW = 58, RW = 168, CW = 688 - LW - RW, cells = (r1 - r0) * 2;
+    const heat = DAYS.map((nm, d) => {
+      const c = t.cov[d], cs = [];
+      for (let j = 0; j < cells; j++) { const i = r0 * 4 + j * 2, n = Math.min(c[i], c[i + 1]); cs.push(h("div", { key: j, style: { flex: 1, background: covColor(t, n, i / 4), border: n === 0 ? "1px solid " + ACC : "none" } })); }
+      return h("div", { key: nm, style: { display: "grid", gridTemplateColumns: LW + "px " + CW + "px " + RW + "px", alignItems: "center", height: 36 } },
+        h("span", { style: { fontSize: 15, fontWeight: 800 } }, nm),
+        h("div", { style: { display: "flex", gap: 1, height: 30 } }, cs),
+        h("div", { style: { display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 } },
+          h("span", { style: { fontSize: 14, fontWeight: 700, whiteSpace: "nowrap" } }, DUR(t.stat[d].mx)),
+          h("span", { style: { fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", background: t.stat[d].gap ? ACC : INK, color: "#fff", padding: "3px 6px" } }, t.stat[d].gap ? "Revisar" : "Cumple")));
+    });
+    const notes = t.notes.map((n, k) => h("div", { key: k, style: { display: "grid", gridTemplateColumns: "44px 1fr", gap: 10, padding: "12px 0", borderBottom: "1px solid #d7d3d3" } },
+      h("span", { style: { fontSize: 16, fontWeight: 800, color: ACC } }, pad(k + 1)),
+      h("span", { style: { fontSize: 17, lineHeight: 1.4, textWrap: "pretty" } }, n)));
+    const sw = [this.swatch(COV[1], "1 persona"), this.swatch(COV[2], "2 personas"), this.swatch(COV[3], "3 o más")];
+    if (t.night) sw.push(this.swatch(COV.night, "Nocturno: 1 persona por diseño"));
+    return this.frame("r" + t.idx, { kicker: "Plantilla " + pad(t.idx + 1) + " · Tienda " + t.op, title: t.n + " personas", sub: "3 · Cobertura y reglas", page: t.start + 2 }, [
+      h("div", { key: "h" },
+        h("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline" } }, this.label("Cobertura de la semana"),
+          h("span", { style: { fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: MUT, marginBottom: 14 } }, "Máx. con 1 persona")),
+        heat,
+        h("div", { style: { marginRight: RW } }, this.axis(t, CW, LW)),
+        h("div", { style: { display: "flex", gap: 18, flexWrap: "wrap", marginTop: 14 } }, sw)),
+      h("div", { key: "v", style: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", background: INK, color: BG } },
+        [["Criterio", "Sin huecos"], ["Horario cubierto", t.night ? "24/7" : "06:00 – 00:00"], ["Revisión", "Cada 15 min"], ["Resultado", "Cumple"]].map(([l, v], k) =>
+          h("div", { key: k, style: { padding: "14px 16px", borderLeft: k ? "1px solid #444141" : "none" } },
+            h("div", { style: { fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#bab6b6" } }, l),
+            h("div", { style: { fontSize: 19, fontWeight: 800, marginTop: 4, color: k === 3 ? "#ff9783" : BG } }, v)))),
+      h("div", { key: "n" }, this.label("Notas operativas", { marginBottom: 4 }), notes)
+    ]);
+  }
+
+  qrPage() {
+    return h("div", { key: "qr", style: { position: "absolute", inset: 0, background: BG, overflow: "hidden" } },
+      h("div", { style: { position: "absolute", left: 0, top: 0, width: W, height: H, transform: "scale(" + this.state.s + ")", transformOrigin: "0 0", display: "flex", flexDirection: "column", justifyContent: "center", gap: 36, padding: 64, fontFamily: F, color: INK } },
+        h("div", { style: { fontSize: 15, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: ACC } }, "Comparte esta guía"),
+        h("h2", { style: { fontWeight: 800, fontSize: 64, lineHeight: 1.02, letterSpacing: "-0.02em", margin: 0 } }, "Escanea el código"),
+        h("div", { style: { height: 2, background: INK } }),
+        h("div", { style: { display: "grid", placeItems: "center", padding: 32, background: "#fff", border: "2px solid " + INK } },
+          h("canvas", { ref: (el) => { this.qrPageEl = el; if (el) this.drawQR(el, 720); }, style: { display: "block", width: 520, height: 520 } })),
+        h("p", { style: { fontSize: 20, lineHeight: 1.5, margin: 0, color: "#4a4644", wordBreak: "break-all" } }, this.shareUrl)));
+  }
+
+  pages() {
+    const out = [this.cover(), this.legend(), this.picker()];
+    TPL.forEach((t) => out.push(this.week(t), this.dayView(t), this.rules(t)));
+    out.push(this.qrPage());
+    return out;
+  }
+
+  drawQR(canvas, size) {
+    if (!canvas || !this.qr) return;
+    try { this.qr(canvas, this.shareUrl || "https://", size, "#201e1d", "#ffffff"); } catch (e) { console.warn("QR:", e.message); }
+  }
+
+  componentDidMount() {
+    this.paint();
+    const el = this.stageRef.current;
+    if (el && typeof ResizeObserver !== "undefined") {
+      this.ro = new ResizeObserver(() => { const s = el.clientWidth / W; if (s && Math.abs(s - this.state.s) > 0.001) this.setState({ s }); });
+      this.ro.observe(el);
+    }
+    this.onKey = (e) => {
+      if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); this.next(); }
+      if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); this.prev(); }
+      if (e.key === "Escape") this.setState({ shareOpen: false });
+      if (e.key.toLowerCase() === "f") this.toggleFull();
+    };
+    window.addEventListener("keydown", this.onKey);
+    import(R.qrjs || "./qr.js").then((m) => { this.qr = m.drawQRCanvas; if (this.qrPageEl) this.drawQR(this.qrPageEl, 720); this.forceUpdate(); }).catch((e) => console.warn("QR módulo:", e));
+  }
+  componentWillUnmount() { window.removeEventListener("keydown", this.onKey); if (this.ro) this.ro.disconnect(); }
+  componentDidUpdate() {
+    this.paint();
+    if (this.state.shareOpen && this.qrModalRef.current) this.drawQR(this.qrModalRef.current, 400);
+  }
+  paint() {
+    if (this.barRef.current) this.barRef.current.style.width = ((this.state.i + 1) / TOTAL * 100) + "%";
+    try { localStorage.setItem("plantillas_guia_page", String(this.state.i)); } catch (e) {}
+  }
+
+  next() { this.goTo(this.state.i + 1); }
+  prev() { this.goTo(this.state.i - 1); }
+  toggleFull() {
+    const el = document.documentElement;
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  }
+
+  goTo(target) {
+    const cur = this.state.i;
+    if (this.busy || target === cur || target < 0 || target >= TOTAL) return;
+    const dir = target > cur ? 1 : -1;
+    const flip = this.flipRef.current, scrim = this.scrimRef.current;
+    if (!flip) { this.setState({ i: target }); return; }
+    this.busy = true;
+    this.flipFace = dir > 0 ? cur : target;
+    this.underIndex = dir > 0 ? target : cur;
+    this.forceUpdate();
+    requestAnimationFrame(() => {
+      flip.style.transition = "none";
+      flip.style.visibility = "visible";
+      flip.style.transform = dir > 0 ? "rotateY(0deg)" : "rotateY(-172deg)";
+      if (scrim) { scrim.style.transition = "none"; scrim.style.opacity = dir > 0 ? "0" : "0.5"; }
+      requestAnimationFrame(() => {
+        const ease = "cubic-bezier(.42,.02,.24,1)";
+        flip.style.transition = "transform " + FLIP_MS + "ms " + ease;
+        flip.style.transform = dir > 0 ? "rotateY(-172deg)" : "rotateY(0deg)";
+        if (scrim) { scrim.style.transition = "opacity " + FLIP_MS + "ms " + ease; scrim.style.opacity = dir > 0 ? "0.5" : "0"; }
+        setTimeout(() => {
+          flip.style.transition = "none";
+          flip.style.visibility = "hidden";
+          if (scrim) { scrim.style.transition = "none"; scrim.style.opacity = "0"; }
+          this.flipFace = null; this.underIndex = null; this.busy = false;
+          this.setState({ i: target });
+        }, FLIP_MS + 20);
+      });
+    });
+  }
+
+  renderVals() {
+    const pages = this.pages();
+    const i = this.state.i;
+    const under = this.underIndex == null ? i : this.underIndex;
+    const face = this.flipFace == null ? i : this.flipFace;
+    return {
+      counter: (i + 1) + " / " + TOTAL,
+      hint: "Desliza o usa las flechas",
+      underContent: pages[under],
+      frontContent: pages[face],
+      shareOpen: this.state.shareOpen,
+      shareUrl: this.shareUrl,
+      copyLabel: this.state.copied ? "Enlace copiado" : "Copiar enlace",
+      stageRef: this.stageRef, underRef: this.underRef, flipRef: this.flipRef,
+      frontRef: this.frontRef, scrimRef: this.scrimRef, barRef: this.barRef, qrModalRef: this.qrModalRef,
+      next: () => this.next(),
+      prev: () => this.prev(),
+      openIndex: () => this.goTo(2),
+      openShare: () => this.setState({ shareOpen: true, copied: false }),
+      closeShare: () => this.setState({ shareOpen: false }),
+      stop: (e) => e.stopPropagation(),
+      copyLink: () => { const t = this.shareUrl; if (navigator.clipboard) navigator.clipboard.writeText(t).catch(() => {}); this.setState({ copied: true }); },
+      toggleFull: () => this.toggleFull(),
+      onDown: (e) => { this.px = e.clientX; this.py = e.clientY; this.pt = Date.now(); },
+      onUp: (e) => {
+        if (this.px == null) return;
+        const dx = e.clientX - this.px, dy = e.clientY - this.py, dt = Date.now() - this.pt;
+        this.px = null;
+        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4 && dt < 900) this.goTo(this.state.i + (dx < 0 ? 1 : -1));
+      }
+    };
+  }
+}
+
+</script>
+</body>
+</html>
